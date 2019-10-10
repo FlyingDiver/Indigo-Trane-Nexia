@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<Devices>
+    <SupportURL>https://forums.indigodomo.com/viewforum.php?f=295</SupportURL>
+     <Device type="custom" id="NexiaAccount">
+        <Name>Nexia User Account</Name>
+        <ConfigUI>
+            <Field id="username" type="textfield">
+                <Label>Username:</Label>
+            </Field>
+            <Field id="password" type="textfield" secure="true">
+                <Label>Password:</Label>
+            </Field>
+            <Field id="house_id" type="textfield">
+                <Label>House ID:</Label>
+            </Field>
+            <Field id="house_idNote" type="label" fontSize="small" fontColor="darkgray">
+                <Label>Your house_id. You can get this from logging in and looking at the url once you're looking at your climate device. 
+                https://www.mynexia.com/houses/&lt;house_id&gt;/climate</Label>
+            </Field>
+            <Field id="authStatus" type="textfield" readonly="true">
+                <Label>Authentication Status:</Label>
+            </Field>
+        </ConfigUI>
+        <States>
+            <State id="authenticated" readonly="true">
+                <ValueType boolType="YesNo">Boolean</ValueType>
+                <TriggerLabel>Authenticated</TriggerLabel>
+                <ControlPageLabel>Authenticated</ControlPageLabel>
+            </State>
+        </States>
+    </Device>
+    <Device type="thermostat" id="NexiaThermostat">
+        <Name>Nexia Thermostat</Name>
+        <ConfigUI>
+            <Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true" />
+            <Field id="account" type="menu">
+                <Label>Nexia Account:</Label>
+                <List class="self" method="get_account_list" dynamicReload="true"/>
+                <CallbackMethod>menuChanged</CallbackMethod>
+            </Field>
+            <Field id="address" type="menu">
+                <Label>Thermostat:</Label>
+                <List class="self" method="get_device_list" dynamicReload="true"/>
+                <CallbackMethod>menuChanged</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </Device>
+</Devices>
