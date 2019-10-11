@@ -33,7 +33,7 @@
     <Device type="thermostat" id="NexiaThermostat">
         <Name>Nexia Thermostat</Name>
         <ConfigUI>
-            <Field id="NumTemperatureInputs"         type="textfield" defaultValue="0"     hidden="true"/>
+            <Field id="NumTemperatureInputs"         type="textfield" defaultValue="1"     hidden="true"/>
             <Field id="NumHumidityInputs"            type="textfield" defaultValue="1"     hidden="true"/>
             <Field id="SupportsHeatSetpoint"         type="checkbox"  defaultValue="false" hidden="true"/>
             <Field id="SupportsCoolSetpoint"         type="checkbox"  defaultValue="false" hidden="true"/>
@@ -109,7 +109,6 @@
                 <ControlPageLabel>air_cleaner_mode</ControlPageLabel>
             </State>
         </States>
-        <UiDisplayStateId>system_status</UiDisplayStateId>
    </Device>
     <Device type="thermostat" id="NexiaZone">
         <Name>Nexia Zone</Name>
@@ -155,6 +154,5 @@
                 <ControlPageLabel>requested_mode</ControlPageLabel>
             </State>
         </States>
-        <UiDisplayStateId>zone_status</UiDisplayStateId>
     </Device>
 </Devices>

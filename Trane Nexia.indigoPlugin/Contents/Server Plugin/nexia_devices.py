@@ -93,6 +93,13 @@ class NexiaThermostat:
         
         air_cleaner_mode = self.account.get_air_cleaner_mode(self.thermostat_id)        
         update_list.append({'key' : "air_cleaner_mode", 'value' : air_cleaner_mode})
+
+        # hack to get compressor speed to show as 
+        update_list.append({'key'           : "temperatureInput1", 
+                            'value'         : (compressor_speed * 100), 
+                            'uiValue'       : "{}%".format(compressor_speed * 100),
+                            'decimalPlaces' : 0})
+
          
         dev.updateStatesOnServer(update_list)
 
