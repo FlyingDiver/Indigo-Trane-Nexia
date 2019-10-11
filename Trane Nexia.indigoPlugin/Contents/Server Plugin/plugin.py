@@ -6,7 +6,7 @@ import logging
 import json
 import platform
 
-from nexia_thermostat import NexiaThermostat
+from nexia_thermostat import NexiaThermostat as NexiaAccount
 
 kHvacModeEnumToStrMap = {
     indigo.kHvacMode.Cool               : u"cool",
@@ -52,6 +52,7 @@ class Plugin(indigo.PluginBase):
         
         self.nexia_accounts = {}
         self.nexia_thermostats = {}
+        self.nexia_zones = {}
 
         self.update_needed = False
         
@@ -135,41 +136,83 @@ class Plugin(indigo.PluginBase):
         return accounts
         
 
-    def get_device_list(self, filter="", valuesDict=None, typeId="", targetId=0):
-        self.logger.debug("get_device_list: typeId = {}, targetId = {}, filter = {}, valuesDict = {}".format(typeId, targetId, filter, valuesDict))
+    def get_thermostat_list(self, filter="", valuesDict=None, typeId="", targetId=0):
+        self.logger.debug("get_thermostat_list: typeId = {}, targetId = {}, filter = {}, valuesDict = {}".format(typeId, targetId, filter, valuesDict))
 
         try:
             account = self.nexia_accounts[int(valuesDict["account"])]
         except:
-            self.logger.debug("get_device_list: no active accounts, returning empty list")
+            self.logger.debug("get_thermostat_list: no active accounts, returning empty list")
             return []
         
-        if typeId == "NexiaThermostat":
-        
-            active_stats =  [
-                (int(indigo.devices[dev].pluginProps["address"]))
-                for dev in self.nexia_thermostats
-            ]
-            self.logger.debug("get_device_list: active_stats = {}".format(active_stats))
+        active_stats =  [
+            (int(indigo.devices[dev].pluginProps["address"]))
+            for dev in self.nexia_thermostats
+        ]
+        self.logger.debug("get_thermostat_list: active_stats = {}".format(active_stats))
 
-            available_devices =[]
-            for thermostat_id in account.get_thermostat_ids():
-                if thermostat_id not in active_stats:
-                    name = account.get_thermostat_name(thermostat_id)
-                    available_devices.append((thermostat_id, name))
+        device_list =[]
+        for thermostat_id in account.get_thermostat_ids():
+            name = account.get_thermostat_name(thermostat_id)
+            if filter == "Available" and thermostat_id not in active_stats:
+                device_list.append((thermostat_id, name))
+            elif filter == "Active" and thermostat_id in active_stats:
+                device_list.append((thermostat_id, name))
+            elif filter == "All":
+                device_list.append((thermostat_id, name))
+    
+        if targetId:
+            try:
+                dev = indigo.devices[targetId]
+                device_list.insert(0, (dev.pluginProps["address"], dev.name))
+            except:
+                pass
+                                                          
+        self.logger.debug("get_thermostat_list: device_list for {} ({}) = {}".format(typeId, filter, device_list))
+        return device_list     
         
-            if targetId:
-                try:
-                    dev = indigo.devices[targetId]
-                    available_devices.insert(0, (dev.pluginProps["address"], dev.name))
-                except:
-                    pass
+        
+    def get_zone_list(self, filter="", valuesDict=None, typeId="", targetId=0):
+        self.logger.debug("get_zone_list: typeId = {}, targetId = {}, filter = {}, valuesDict = {}".format(typeId, targetId, filter, valuesDict))
+
+        try:
+            account = self.nexia_accounts[int(valuesDict["account"])]
+        except:
+            self.logger.debug("get_zone_list: no active accounts, returning empty list")
+            return []
+
+        try:                       
+            thermostat_id = int(valuesDict["thermostat"])
+        except:
+            self.logger.debug("get_zone_list: no thermostat selected, returning empty list")
+            return []
+                                
+        active_zones =  [
+            (int(indigo.devices[dev].pluginProps["address"]))
+            for dev in self.nexia_zones
+        ]
+        self.logger.debug("get_zone_list: active_zones = {}".format(active_zones))
+
+        device_list =[]
+        for zone_id in account.get_zone_ids(thermostat_id):
+            name = account.get_zone_name(thermostat_id, zone_id)
+            if filter == "Available" and zone_id not in active_zones:
+                device_list.append((zone_id, name))
+            elif filter == "Active" and zone_id in active_zones:
+                device_list.append((zone_id, name))
+            elif filter == "All":
+                device_list.append((zone_id, name))
+    
+        if targetId:
+            try:
+                dev = indigo.devices[targetId]
+                device_list.insert(0, (dev.pluginProps["address"], dev.name))
+            except:
+                pass
                         
-        else:
-            self.logger.warning("get_device_list: unknown typeId = {}".format(typeId))
-          
-        self.logger.debug("get_device_list: available_devices for {} = {}".format(typeId, available_devices))
-        return available_devices     
+        self.logger.debug("get_zone_list: device_list for {} ({}) = {}".format(typeId, filter, device_list))
+        return device_list     
+
 
     # doesn't do anything, just needed to force other menus to dynamically refresh
     def menuChanged(self, valuesDict = None, typeId = None, devId = None):
@@ -203,17 +246,21 @@ class Plugin(indigo.PluginBase):
         self.logger.info(u"{}: Starting {} Device {}".format(dev.name, dev.deviceTypeId, dev.id))
         
         if dev.deviceTypeId == 'NexiaAccount':
-            NexiaAccount = NexiaThermostat(int(dev.pluginProps['house_id']), dev.pluginProps['username'], dev.pluginProps['password'], True, self.updateFrequency)
-            if not NexiaAccount:
+            account = NexiaAccount(int(dev.pluginProps['house_id']), dev.pluginProps['username'], dev.pluginProps['password'], True, self.updateFrequency)
+            if not account:
                 dev.updateStateOnServer(key="authenticated", value=False)
                 return
            
-            self.nexia_accounts[dev.id] = NexiaAccount
+            self.nexia_accounts[dev.id] = account
             dev.updateStateOnServer(key="authenticated", value=True)
                             
         elif dev.deviceTypeId == 'NexiaThermostat':
 
-            self.nexia_thermostats[dev.id] = dev
+            thermostat =  NexiaThermostat(int(dev.pluginProps['account']), int(dev.pluginProps['address']))
+            if not thermostat:
+                return
+
+            self.nexia_thermostats[dev.id] = thermostat
             self.update_needed = True
             
 

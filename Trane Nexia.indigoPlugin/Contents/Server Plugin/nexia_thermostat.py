@@ -1,5 +1,16 @@
 # """ Nexia Climate Device Access """
 
+# Derived from:
+# https://github.com/ryannazaretian/home-assistant/tree/dev/homeassistant/components/nexia
+#
+# License:  https://github.com/ryannazaretian/home-assistant/blob/dev/LICENSE.md
+#
+# This version modified to work on Python 2.7 as required for Indigo 7 plugins
+# 
+# Other modifications:
+#   use 'html.parser' for BeautifulSoup
+#   use  verify=False option for request calls because server certificates are incomplete.
+
 import datetime
 import json
 import math
@@ -160,7 +171,7 @@ class NexiaThermostat:
         if request.status_code == 302:
             # assuming its redirecting to login
             self.login()
-            request = self._put_url(url, payload, verify = Falses)
+            request = self._put_url(url, payload, verify = False)
 
         self._check_response("Failed PUT Request:\n  Url: {}\n  Payload {}".format(url, str(payload)),request)
 
