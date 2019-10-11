@@ -7,342 +7,193 @@ import time
 import logging
 from nexia_thermostat import NexiaThermostat as NexiaAccount
 
-import temperature_scale
 import indigo
 
 
 HVAC_MODE_MAP = {
-    'heat'        : indigo.kHvacMode.Heat,
-    'cool'        : indigo.kHvacMode.Cool,
-    'auto'        : indigo.kHvacMode.HeatCool,
-    'auxHeatOnly' : indigo.kHvacMode.Heat,
-    'off'         : indigo.kHvacMode.Off
+    'HEAT'        : indigo.kHvacMode.Heat,
+    'COOL'        : indigo.kHvacMode.Cool,
+    'AUTO'        : indigo.kHvacMode.HeatCool,
+    'OFF'         : indigo.kHvacMode.Off
     }
 
 FAN_MODE_MAP = {
     'auto': indigo.kFanMode.Auto,
-    'on'  : indigo.kFanMode.AlwaysOn
+    'on'  : indigo.kFanMode.AlwaysOn,
+    'circulate'  : indigo.kFanMode.Auto
     }
 
 
 class NexiaThermostat:
 
-    def __init__(self, dev):
+    def __init__(self, device_id, account_id, thermostat_id):
         self.logger = logging.getLogger('Plugin.nexia_devices')
-        self.dev = dev
-        self.address = dev.address
+        self.device_id = device_id
+        self.account_id = account_id
+        self.thermostat_id = thermostat_id
         self.account = None
+        dev = indigo.devices[self.device_id]
         
         self.logger.threaddebug(u"{}: NexiaThermostat __init__ starting, pluginProps =\n{}".format(dev.name, dev.pluginProps))
             
         return
 
     def update(self):
-
-        self.logger.debug(u"{}: Updating device".format(self.dev.name))
+        dev = indigo.devices[self.device_id]
+        self.logger.debug(u"{}: Update".format(dev.name))
         
         # has the Nexia account been initialized yet?
+        account_dev = indigo.devices[self.account_id]
+        if not account_dev.states['authenticated']:
+            self.logger.info('Nexia account not authenticated yet; not initializing state of device {}'.format(self.address))
+            return
+        
         if not self.account:
-
-            if len(indigo.activePlugin.nexia_accounts) == 0:
-                self.logger.debug(u"{}: No Nexia accounts available, skipping this device.".format(self.dev.name))
-                return
-            
             try:
-                accountID = int(self.dev.pluginProps["account"])
-                self.account = indigo.activePlugin.nexia_accounts[accountID]
-                self.logger.debug(u"{}: Nexia Account device assigned, {}".format(self.dev.name, accountID))
+                self.account = indigo.activePlugin.nexia_accounts[self.account_id]
+                self.logger.debug(u"{}: Nexia Account device assigned, {}".format(dev.name, self.account_id))
             except:
                 self.logger.error(u"updatable: Error obtaining Nexia account object")
                 return
-            
-            if not self.account.states['authenticated']:
-                self.logger.info('not authenticated to Nexia servers yet; not initializing state of device {}'.format(self.address))
-                return
-
-        
+                    
         update_list = []
         
-        self.name = thermostat_data.get('name')
-
-        device_type = thermostat_data.get('modelNumber')
-        self.dev.updateStateOnServer(key="device_type", value=device_type)
+        thermostat_model = self.account.get_thermostat_model(self.thermostat_id)        
+        update_list.append({'key' : "thermostat_model", 'value' : thermostat_model})
         
-        update_list.append({'key' : "device_type", 'value' : device_type})
+        thermostat_firmware = self.account.get_thermostat_firmware(self.thermostat_id)        
+        update_list.append({'key' : "thermostat_firmware", 'value' : thermostat_firmware})
         
-        hsp = thermostat_data.get('desiredHeat')
-        update_list.append({'key'           : "setpointHeat", 
-                            'value'         : EcobeeThermostat.temperatureFormatter.convert(hsp), 
-                            'uiValue'       : EcobeeThermostat.temperatureFormatter.format(hsp),
-                            'decimalPlaces' : 1})
-
-        csp = thermostat_data.get('desiredCool')
-        update_list.append({'key'           : "setpointCool", 
-                            'value'         : EcobeeThermostat.temperatureFormatter.convert(csp), 
-                            'uiValue'       : EcobeeThermostat.temperatureFormatter.format(csp),
-                            'decimalPlaces' : 1})
-
-        dispTemp = thermostat_data.get('actualTemperature')
-        update_list.append({'key'           : "temperatureInput1", 
-                            'value'         : EcobeeThermostat.temperatureFormatter.convert(dispTemp), 
-                            'uiValue'       : EcobeeThermostat.temperatureFormatter.format(dispTemp),
-                            'decimalPlaces' : 1})
-
-
-        climate = thermostat_data.get('currentClimate')
-        update_list.append({'key' : "climate", 'value' : climate})
-
-        hvacMode = thermostat_data.get('hvacMode')
-        update_list.append({'key' : "hvacOperationMode", 'value' : HVAC_MODE_MAP[hvacMode]})
-
-        fanMode = thermostat_data.get('desiredFanMode')
-        update_list.append({'key' : "hvacFanMode", 'value' : int(FAN_MODE_MAP[fanMode])})
-
-        hum = thermostat_data.get('actualHumidity')
-        update_list.append({'key' : "humidityInput1", 'value' : float(hum)})
+        thermostat_type = self.account.get_thermostat_type(self.thermostat_id)        
+        update_list.append({'key' : "thermostat_type", 'value' : thermostat_type})
         
-        fanMinOnTime = thermostat_data.get('fanMinOnTime')
-        update_list.append({'key' : "fanMinOnTime", 'value' : fanMinOnTime})
-
-        status = thermostat_data.get('equipmentStatus')
-        update_list.append({'key' : "equipmentStatus", 'value' : status})
-
-        val = bool(status and ('heatPump' in status or 'auxHeat' in status))
-        update_list.append({'key' : "hvacHeaterIsOn", 'value' : val})
-
-        val = bool(status and ('compCool' in status))
-        update_list.append({'key' : "hvacCoolerIsOn", 'value' : val})
-
-        val = bool(status and ('fan' in status or 'ventilator' in status))
-        update_list.append({'key' : "hvacFanIsOn", 'value' : val})
+        fan_mode = self.account.get_fan_mode(self.thermostat_id)        
+        update_list.append({'key' : "fan_mode", 'value' : fan_mode})
         
-        if device_type in ['athenaSmart', 'nikeSmart', 'apolloSmart']:
+        fan_speed = self.account.get_fan_speed_setpoint(self.thermostat_id)        
+        update_list.append({'key' : "fan_speed", 'value' : fan_speed})
         
-            temp2 = thermostat_data.get('internal').get('temperature')
-            update_list.append({'key'           : "temperatureInput2", 
-                                'value'         : EcobeeThermostat.temperatureFormatter.convert(temp2), 
-                                'uiValue'       : EcobeeThermostat.temperatureFormatter.format(temp2),
-                                'decimalPlaces' : 1})
+        outdoor_temperature = self.account.get_outdoor_temperature(self.thermostat_id)        
+        update_list.append({'key' : "outdoor_temperature", 'value' : outdoor_temperature})
+        
+        humidity = self.account.get_relative_humidity(self.thermostat_id) 
+        update_list.append({'key' : "humidityInput1", 'value' : (humidity * 100.0)})
+        
+        dehumidify_setpoint = self.account.get_dehumidify_setpoint(self.thermostat_id)        
+        update_list.append({'key' : "dehumidify_setpoint", 'value' : dehumidify_setpoint})
+        
+        blowerOn = self.account.is_blower_active(self.thermostat_id)
+        update_list.append({'key' : "blowerOn", 'value' : blowerOn})
 
-            latestEventType = thermostat_data.get('latestEventType')
-            update_list.append({'key': "autoHome", 'value' : bool(latestEventType and ('autoHome' in latestEventType))})
-            update_list.append({'key': "autoAway", 'value' : bool(latestEventType and ('autoAway' in latestEventType))})
+        system_status = self.account.get_system_status(self.thermostat_id)
+        update_list.append({'key' : "system_status", 'value' : system_status})
+        
+        compressor_speed = self.account.get_current_compressor_speed(self.thermostat_id)        
+        update_list.append({'key' : "compressor_speed", 'value' : compressor_speed})
+        
+        air_cleaner_mode = self.account.get_air_cleaner_mode(self.thermostat_id)        
+        update_list.append({'key' : "air_cleaner_mode", 'value' : air_cleaner_mode})
+         
+        dev.updateStatesOnServer(update_list)
 
-        self.dev.updateStatesOnServer(update_list)
+    def set_fan_mode(self, fan_mode):       
+        self.account.set_fan_mode(fan_mode.upper(), self.thermostat_id)
+
 
 class NexiaZone:
 
-    def __init__(self, dev):
+    def __init__(self, device_id, account_id, thermostat_id, zone_id):
         self.logger = logging.getLogger('Plugin.nexia_devices')
-        self.dev = dev
-        self.address = dev.address
+        self.device_id = device_id
+        self.account_id = account_id
+        self.thermostat_id = thermostat_id
+        self.zone_id = zone_id
         self.account = None
+        dev = indigo.devices[self.device_id]
         
         self.logger.threaddebug(u"{}: NexiaZone __init__ starting, pluginProps =\n{}".format(dev.name, dev.pluginProps))
             
         return
 
     def update(self):
-
-        self.logger.debug(u"{}: Updating device".format(self.dev.name))
+        dev = indigo.devices[self.device_id]
+        self.logger.debug(u"{}: Update".format(dev.name))
         
         # has the Nexia account been initialized yet?
+        account_dev = indigo.devices[self.account_id]
+        if not account_dev.states['authenticated']:
+            self.logger.info('Nexia account not authenticated yet; not initializing state of device {}'.format(self.address))
+            return
+        
         if not self.account:
-
-            if len(indigo.activePlugin.nexia_accounts) == 0:
-                self.logger.debug(u"{}: No Nexia accounts available, skipping this device.".format(self.dev.name))
-                return
-            
             try:
-                accountID = int(self.dev.pluginProps["account"])
-                self.account = indigo.activePlugin.nexia_accounts[accountID]
-                self.logger.debug(u"{}: Nexia Account device assigned, {}".format(self.dev.name, accountID))
+                self.account = indigo.activePlugin.nexia_accounts[self.account_id]
+                self.logger.debug(u"{}: Nexia Account device assigned, {}".format(dev.name, self.account_id))
             except:
                 self.logger.error(u"updatable: Error obtaining Nexia account object")
-                return
-            
-            if not self.account.states['authenticated']:
-                self.logger.info('not authenticated to Nexia servers yet; not initializing state of device {}'.format(self.address))
                 return
 
         
         update_list = []
-        
-        self.name = self.account.get_zone_name()
-
-        device_type = thermostat_data.get('modelNumber')
-        self.dev.updateStateOnServer(key="device_type", value=device_type)
-        
-        update_list.append({'key' : "device_type", 'value' : device_type})
-        
-        hsp = thermostat_data.get('desiredHeat')
+                
+        hsp = self.account.get_zone_heating_setpoint(self.thermostat_id, self.zone_id)
         update_list.append({'key'           : "setpointHeat", 
-                            'value'         : EcobeeThermostat.temperatureFormatter.convert(hsp), 
-                            'uiValue'       : EcobeeThermostat.temperatureFormatter.format(hsp),
+                            'value'         : hsp, 
+                            'uiValue'       : hsp,
                             'decimalPlaces' : 1})
 
-        csp = thermostat_data.get('desiredCool')
+        csp = self.account.get_zone_cooling_setpoint(self.thermostat_id, self.zone_id)
         update_list.append({'key'           : "setpointCool", 
-                            'value'         : EcobeeThermostat.temperatureFormatter.convert(csp), 
-                            'uiValue'       : EcobeeThermostat.temperatureFormatter.format(csp),
+                            'value'         : csp, 
+                            'uiValue'       : csp,
                             'decimalPlaces' : 1})
 
-        dispTemp = thermostat_data.get('actualTemperature')
+        dispTemp = self.account.get_zone_temperature(self.thermostat_id, self.zone_id)
         update_list.append({'key'           : "temperatureInput1", 
-                            'value'         : EcobeeThermostat.temperatureFormatter.convert(dispTemp), 
-                            'uiValue'       : EcobeeThermostat.temperatureFormatter.format(dispTemp),
+                            'value'         : dispTemp, 
+                            'uiValue'       : dispTemp,
                             'decimalPlaces' : 1})
 
-
-        climate = thermostat_data.get('currentClimate')
-        update_list.append({'key' : "climate", 'value' : climate})
-
-        hvacMode = thermostat_data.get('hvacMode')
+        hvacMode = self.account.get_zone_current_mode(self.thermostat_id, self.zone_id)
         update_list.append({'key' : "hvacOperationMode", 'value' : HVAC_MODE_MAP[hvacMode]})
 
-        fanMode = thermostat_data.get('desiredFanMode')
-        update_list.append({'key' : "hvacFanMode", 'value' : int(FAN_MODE_MAP[fanMode])})
-
-        hum = thermostat_data.get('actualHumidity')
-        update_list.append({'key' : "humidityInput1", 'value' : float(hum)})
+        zone_status = self.account.get_zone_status(self.thermostat_id, self.zone_id)
+        update_list.append({'key' : "zone_status", 'value' : zone_status})
         
-        fanMinOnTime = thermostat_data.get('fanMinOnTime')
-        update_list.append({'key' : "fanMinOnTime", 'value' : fanMinOnTime})
-
-        status = thermostat_data.get('equipmentStatus')
-        update_list.append({'key' : "equipmentStatus", 'value' : status})
-
-        val = bool(status and ('heatPump' in status or 'auxHeat' in status))
-        update_list.append({'key' : "hvacHeaterIsOn", 'value' : val})
-
-        val = bool(status and ('compCool' in status))
-        update_list.append({'key' : "hvacCoolerIsOn", 'value' : val})
-
-        val = bool(status and ('fan' in status or 'ventilator' in status))
-        update_list.append({'key' : "hvacFanIsOn", 'value' : val})
+        zone_called = self.account.is_zone_calling(self.thermostat_id, self.zone_id)
+        update_list.append({'key' : "zone_called", 'value' : zone_called})
         
-        if device_type in ['athenaSmart', 'nikeSmart', 'apolloSmart']:
+        requested_mode = self.account.get_zone_requested_mode(self.thermostat_id, self.zone_id)
+        update_list.append({'key' : "requested_mode", 'value' : requested_mode})
+              
+        system_status = self.account.get_system_status(self.thermostat_id)
+        if requested_mode == self.account.OPERATION_MODE_OFF:
+            heatOn = False
+            coolOn = False    
+        elif not zone_called:
+            heatOn = False
+            coolOn = False    
+        elif system_status == self.account.SYSTEM_STATUS_COOL:
+            heatOn = False
+            coolOn = True    
+        elif system_status == self.account.SYSTEM_STATUS_HEAT:
+            heatOn = True
+            coolOn = False    
+        elif system_status == self.account.SYSTEM_STATUS_IDLE:
+            heatOn = False
+            coolOn = False    
+        else:
+            heatOn = False
+            coolOn = False    
+        update_list.append({'key' : "hvacHeaterIsOn", 'value' : heatOn})
+        update_list.append({'key' : "hvacCoolerIsOn", 'value' : coolOn})
         
-            temp2 = thermostat_data.get('internal').get('temperature')
-            update_list.append({'key'           : "temperatureInput2", 
-                                'value'         : EcobeeThermostat.temperatureFormatter.convert(temp2), 
-                                'uiValue'       : EcobeeThermostat.temperatureFormatter.format(temp2),
-                                'decimalPlaces' : 1})
-
-            latestEventType = thermostat_data.get('latestEventType')
-            update_list.append({'key': "autoHome", 'value' : bool(latestEventType and ('autoHome' in latestEventType))})
-            update_list.append({'key': "autoAway", 'value' : bool(latestEventType and ('autoAway' in latestEventType))})
-
-        self.dev.updateStatesOnServer(update_list)
+        dev.updateStatesOnServer(update_list)
 
 
-    def set_hvac_mode(self, hvac_mode):     # possible hvac modes are auto, auxHeatOnly, cool, heat, off 
-        body =  {
-                    "selection": 
-                    {
-                        "selectionType"  : "thermostats",
-                        "selectionMatch" : self.dev.address 
-                    },
-                    "thermostat" : 
-                    {
-                        "settings": 
-                        {
-                            "hvacMode": hvac_mode
-                        }
-                    }
-                }
-        log_msg_action = "set HVAC mode"
-        self.ecobee.make_request(body, log_msg_action)
+    def set_zone_mode(self, hvac_mode):        
+        self.account.set_zone_mode(hvac_mode.upper(), self.thermostat_id, self.zone_id)
 
-
-    def set_hold_temp(self, cool_temp, heat_temp, hold_type="nextTransition"):  # Set a hold
-        body =  {
-                    "selection": 
-                    {
-                        "selectionType"  : "thermostats",
-                        "selectionMatch" : self.dev.address 
-                    },
-                    "functions": 
-                    [
-                        {
-                            "type"   : "setHold", 
-                            "params" : 
-                            {
-                                "holdType": hold_type,
-                                "coolHoldTemp": int(cool_temp * 10),
-                                "heatHoldTemp": int(heat_temp * 10)
-                            }
-                        }
-                    ]
-                }
-        log_msg_action = "set hold temp"
-        self.ecobee.make_request(body, log_msg_action)
-
-    def set_hold_temp_with_fan(self, cool_temp, heat_temp, hold_type="nextTransition"):     # Set a fan hold
-        body =  {
-                    "selection" : 
-                    {
-                        "selectionType"  : "thermostats",
-                        "selectionMatch" : self.dev.address 
-                    },
-                    "functions" : 
-                    [
-                        {
-                            "type"   : "setHold", 
-                            "params" : 
-                            {
-                                "holdType"     : hold_type,
-                                "coolHoldTemp" : int(cool_temp * 10),
-                                "heatHoldTemp" : int(heat_temp * 10),
-                                "fan"          : "on"
-                            }
-                        }
-                    ]
-                }
-        log_msg_action = "set hold temp with fan on"
-        self.ecobee.make_request(body, log_msg_action)
-
-    def set_climate_hold(self, climate, hold_type="nextTransition"):    # Set a climate hold - ie away, home, sleep
-        body =  {
-                    "selection" : 
-                    {
-                        "selectionType"  : "thermostats",
-                        "selectionMatch" : self.dev.address 
-                    },
-                    "functions" : 
-                    [
-                        {
-                            "type"   : "setHold", 
-                            "params" : 
-                            {
-                                "holdType"       : hold_type,
-                                "holdClimateRef" : climate
-                            }
-                        }
-                    ]
-                }
-        log_msg_action = "set climate hold"
-        self.ecobee.make_request(body, log_msg_action)
-
-    def resume_program(self):   # Resume currently scheduled program
-        body =  {
-                    "selection" : 
-                    {
-                        "selectionType"  : "thermostats",
-                        "selectionMatch" : self.dev.address 
-                    },
-                    "functions" : 
-                    [
-                        {
-                            "type"   : "resumeProgram", 
-                            "params" : 
-                            {
-                                "resumeAll": "False"
-                            }
-                        }
-                    ]
-                }
-        log_msg_action = "resume program"
-        self.ecobee.make_request(body, log_msg_action)
-
+    def set_zone_heat_cool_temp(self, heatSetpoint, coolSetpoint):        
+        self.account.set_zone_heat_cool_temp(heatSetpoint, coolSetpoint, None, self.thermostat_id, self.zone_id)
 

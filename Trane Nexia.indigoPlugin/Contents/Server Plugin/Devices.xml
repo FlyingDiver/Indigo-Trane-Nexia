@@ -30,61 +30,73 @@
         </States>
         <UiDisplayStateId>authenticated</UiDisplayStateId>
    </Device>
-    <Device type="custom" id="NexiaThermostat">
+    <Device type="thermostat" id="NexiaThermostat">
         <Name>Nexia Thermostat</Name>
         <ConfigUI>
-            <Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true" />
-            <Field id="account" type="menu">
+            <Field id="NumTemperatureInputs"         type="textfield" defaultValue="0"     hidden="true"/>
+            <Field id="NumHumidityInputs"            type="textfield" defaultValue="1"     hidden="true"/>
+            <Field id="SupportsHeatSetpoint"         type="checkbox"  defaultValue="false" hidden="true"/>
+            <Field id="SupportsCoolSetpoint"         type="checkbox"  defaultValue="false" hidden="true"/>
+            <Field id="SupportsHvacOperationMode"    type="checkbox"  defaultValue="false" hidden="true"/>
+            <Field id="SupportsHvacFanMode"          type="checkbox"  defaultValue="true"  hidden="true"/>
+            <Field id="ShowCoolHeatEquipmentStateUI" type="checkbox"  defaultValue="true"  hidden="true"/>
+
+            <Field id="nexia_account" type="menu">
                 <Label>Nexia Account:</Label>
                 <List class="self" method="get_account_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
-            <Field id="address" type="menu">
+            <Field id="nexia_thermostat" type="menu">
                 <Label>Thermostat:</Label>
                 <List class="self" filter="Available" method="get_thermostat_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
         </ConfigUI>
          <States>
-            <State id="system_status" readonly="true">
+            <State id="thermostat_model" readonly="true">
                 <ValueType>String</ValueType>
-                <TriggerLabel>System Status</TriggerLabel>
-                <ControlPageLabel>System Status</ControlPageLabel>
+                <TriggerLabel>thermostat_model</TriggerLabel>
+                <ControlPageLabel>thermostat_model</ControlPageLabel>
             </State>
-            <State id="name" readonly="true">
+            <State id="thermostat_firmware" readonly="true">
                 <ValueType>String</ValueType>
-                <TriggerLabel>Name</TriggerLabel>
-                <ControlPageLabel>Name</ControlPageLabel>
+                <TriggerLabel>thermostat_firmware</TriggerLabel>
+                <ControlPageLabel>thermostat_firmware</ControlPageLabel>
             </State>
-            <State id="model_number" readonly="true">
+            <State id="thermostat_type" readonly="true">
                 <ValueType>String</ValueType>
-                <TriggerLabel>Model</TriggerLabel>
-                <ControlPageLabel>Model</ControlPageLabel>
+                <TriggerLabel>thermostat_type</TriggerLabel>
+                <ControlPageLabel>thermostat_type</ControlPageLabel>
             </State>
-            <State id="manufacturer_code" readonly="true">
+            <State id="fan_mode" readonly="true">
                 <ValueType>String</ValueType>
-                <TriggerLabel>manufacturer_code</TriggerLabel>
-                <ControlPageLabel>manufacturer_code</ControlPageLabel>
-            </State>
-            <State id="type" readonly="true">
-                <ValueType>String</ValueType>
-                <TriggerLabel>Type</TriggerLabel>
-                <ControlPageLabel>Type</ControlPageLabel>
-            </State>
-            <State id="fan_type" readonly="true">
-                <ValueType>String</ValueType>
-                <TriggerLabel>Fan Type</TriggerLabel>
-                <ControlPageLabel>Fan Type</ControlPageLabel>
+                <TriggerLabel>fan_mode</TriggerLabel>
+                <ControlPageLabel>fan_mode</ControlPageLabel>
             </State>
             <State id="fan_speed" readonly="true">
                 <ValueType>String</ValueType>
                 <TriggerLabel>fan_speed</TriggerLabel>
                 <ControlPageLabel>fan_speed</ControlPageLabel>
             </State>
-            <State id="fan_mode" readonly="true">
+            <State id="outdoor_temperature" readonly="true">
                 <ValueType>String</ValueType>
-                <TriggerLabel>fan_mode</TriggerLabel>
-                <ControlPageLabel>fan_mode</ControlPageLabel>
+                <TriggerLabel>outdoor_temperature</TriggerLabel>
+                <ControlPageLabel>outdoor_temperature</ControlPageLabel>
+            </State>
+            <State id="dehumidify_setpoint" readonly="true">
+                <ValueType>String</ValueType>
+                <TriggerLabel>dehumidify_setpoint</TriggerLabel>
+                <ControlPageLabel>dehumidify_setpoint</ControlPageLabel>
+            </State>
+            <State id="blowerOn" readonly="true">
+                <ValueType>String</ValueType>
+                <TriggerLabel>blowerOn</TriggerLabel>
+                <ControlPageLabel>blowerOn</ControlPageLabel>
+            </State>
+            <State id="system_status" readonly="true">
+                <ValueType>String</ValueType>
+                <TriggerLabel>system_status</TriggerLabel>
+                <ControlPageLabel>system_status</ControlPageLabel>
             </State>
             <State id="compressor_speed" readonly="true">
                 <ValueType>String</ValueType>
@@ -96,44 +108,51 @@
                 <TriggerLabel>air_cleaner_mode</TriggerLabel>
                 <ControlPageLabel>air_cleaner_mode</ControlPageLabel>
             </State>
-            <State id="zoning_enabled" readonly="true">
-                <ValueType>String</ValueType>
-                <TriggerLabel>zoning_enabled</TriggerLabel>
-                <ControlPageLabel>zoning_enabled</ControlPageLabel>
-            </State>
         </States>
         <UiDisplayStateId>system_status</UiDisplayStateId>
    </Device>
     <Device type="thermostat" id="NexiaZone">
         <Name>Nexia Zone</Name>
         <ConfigUI>
-            <Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true" />
-            <Field id="account" type="menu">
+            <Field id="NumTemperatureInputs"         type="textfield" defaultValue="1"     hidden="true"/>
+            <Field id="NumHumidityInputs"            type="textfield" defaultValue="0"     hidden="true"/>
+            <Field id="SupportsHeatSetpoint"         type="checkbox"  defaultValue="true"  hidden="true"/>
+            <Field id="SupportsCoolSetpoint"         type="checkbox"  defaultValue="true"  hidden="true"/>
+            <Field id="SupportsHvacOperationMode"    type="checkbox"  defaultValue="true"  hidden="true"/>
+            <Field id="SupportsHvacFanMode"          type="checkbox"  defaultValue="false" hidden="true"/>
+            <Field id="ShowCoolHeatEquipmentStateUI" type="checkbox"  defaultValue="true"  hidden="true"/>
+
+            <Field id="nexia_account" type="menu">
                 <Label>Nexia Account:</Label>
                 <List class="self" method="get_account_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
-            <Field id="thermostat" type="menu">
+            <Field id="nexia_thermostat" type="menu">
                 <Label>Nexia Thermostat:</Label>
                 <List class="self"  filter="Active" method="get_thermostat_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
-            <Field id="address" type="menu">
+            <Field id="nexia_zone" type="menu">
                 <Label>Zone:</Label>
                 <List class="self" filter="Available" method="get_zone_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
         </ConfigUI>
-         <States>
+        <States>
             <State id="zone_status" readonly="true">
                 <ValueType>String</ValueType>
-                <TriggerLabel>System Status</TriggerLabel>
-                <ControlPageLabel>System Status</ControlPageLabel>
+                <TriggerLabel>zone_status</TriggerLabel>
+                <ControlPageLabel>zone_status</ControlPageLabel>
             </State>
-            <State id="name" readonly="true">
+            <State id="zone_called" readonly="true">
                 <ValueType>String</ValueType>
-                <TriggerLabel>Name</TriggerLabel>
-                <ControlPageLabel>Name</ControlPageLabel>
+                <TriggerLabel>zone_called</TriggerLabel>
+                <ControlPageLabel>zone_called</ControlPageLabel>
+            </State>
+            <State id="requested_mode" readonly="true">
+                <ValueType>String</ValueType>
+                <TriggerLabel>requested_mode</TriggerLabel>
+                <ControlPageLabel>requested_mode</ControlPageLabel>
             </State>
         </States>
         <UiDisplayStateId>zone_status</UiDisplayStateId>

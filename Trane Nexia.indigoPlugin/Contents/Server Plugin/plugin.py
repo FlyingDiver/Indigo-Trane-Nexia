@@ -7,6 +7,7 @@ import json
 import platform
 
 from nexia_thermostat import NexiaThermostat as NexiaAccount
+from nexia_devices import NexiaThermostat, NexiaZone
 
 kHvacModeEnumToStrMap = {
     indigo.kHvacMode.Cool               : u"cool",
@@ -110,8 +111,11 @@ class Plugin(indigo.PluginBase):
 
                     # now update the Indigo devices         
                     
-#                    for dev in self.nexia_thermostats.values():
-#                        dev.update()
+                    for dev in self.nexia_thermostats.values():
+                        dev.update()
+                    
+                    for dev in self.nexia_zones.values():
+                        dev.update()
                     
                 self.sleep(2.0)
 
@@ -140,13 +144,13 @@ class Plugin(indigo.PluginBase):
         self.logger.debug("get_thermostat_list: typeId = {}, targetId = {}, filter = {}, valuesDict = {}".format(typeId, targetId, filter, valuesDict))
 
         try:
-            account = self.nexia_accounts[int(valuesDict["account"])]
+            account = self.nexia_accounts[int(valuesDict["nexia_account"])]
         except:
             self.logger.debug("get_thermostat_list: no active accounts, returning empty list")
             return []
         
         active_stats =  [
-            (int(indigo.devices[dev].pluginProps["address"]))
+            (int(indigo.devices[dev].pluginProps["nexia_thermostat"]))
             for dev in self.nexia_thermostats
         ]
         self.logger.debug("get_thermostat_list: active_stats = {}".format(active_stats))
@@ -164,7 +168,7 @@ class Plugin(indigo.PluginBase):
         if targetId:
             try:
                 dev = indigo.devices[targetId]
-                device_list.insert(0, (dev.pluginProps["address"], dev.name))
+                device_list.insert(0, (dev.pluginProps["nexia_thermostat"], dev.name))
             except:
                 pass
                                                           
@@ -176,19 +180,19 @@ class Plugin(indigo.PluginBase):
         self.logger.debug("get_zone_list: typeId = {}, targetId = {}, filter = {}, valuesDict = {}".format(typeId, targetId, filter, valuesDict))
 
         try:
-            account = self.nexia_accounts[int(valuesDict["account"])]
+            account = self.nexia_accounts[int(valuesDict["nexia_account"])]
         except:
             self.logger.debug("get_zone_list: no active accounts, returning empty list")
             return []
 
         try:                       
-            thermostat_id = int(valuesDict["thermostat"])
+            thermostat_id = int(valuesDict["nexia_thermostat"])
         except:
             self.logger.debug("get_zone_list: no thermostat selected, returning empty list")
             return []
                                 
         active_zones =  [
-            (int(indigo.devices[dev].pluginProps["address"]))
+            (int(indigo.devices[dev].pluginProps["nexia_zone"]))
             for dev in self.nexia_zones
         ]
         self.logger.debug("get_zone_list: active_zones = {}".format(active_zones))
@@ -206,7 +210,7 @@ class Plugin(indigo.PluginBase):
         if targetId:
             try:
                 dev = indigo.devices[targetId]
-                device_list.insert(0, (dev.pluginProps["address"], dev.name))
+                device_list.insert(0, (dev.pluginProps["nexia_zone"], dev.name))
             except:
                 pass
                         
@@ -227,16 +231,36 @@ class Plugin(indigo.PluginBase):
         valid = True
         
         if typeId == "NexiaThermostat":
-            if valuesDict["account"] == 0:
-                errorsDict["account"] = "No Nexia Account Specified"
+            if valuesDict["nexia_account"] == 0:
+                errorsDict["nexia_account"] = "No Nexia Account Specified"
                 self.logger.warning("validateDeviceConfigUi - No Nexia Account Specified")
                 valid = False
             
-            if len(valuesDict["address"]) == 0:
-                errorsDict["address"] = "No Thermostat Specified"
+            if len(valuesDict["nexia_thermostat"]) == 0:
+                errorsDict["nexia_thermostat"] = "No Thermostat Specified"
+                self.logger.warning("validateDeviceConfigUi - No Thermostat Specified")
+                valid = False              
+
+            valuesDict["address"] = "{}".format(valuesDict["nexia_thermostat"])
+
+        elif typeId == "NexiaZone":            
+            if valuesDict["nexia_account"] == 0:
+                errorsDict["nexia_account"] = "No Nexia Account Specified"
+                self.logger.warning("validateDeviceConfigUi - No Nexia Account Specified")
+                valid = False
+            
+            if len(valuesDict["nexia_thermostat"]) == 0:
+                errorsDict["nexia_thermostat"] = "No Thermostat Specified"
                 self.logger.warning("validateDeviceConfigUi - No Thermostat Specified")
                 valid = False              
         
+            if len(valuesDict["nexia_zone"]) == 0:
+                errorsDict["nexia_zone"] = "No Zone Specified"
+                self.logger.warning("validateDeviceConfigUi - No Zone Specified")
+                valid = False              
+        
+            valuesDict["address"] = "{}:{}".format(valuesDict["nexia_thermostat"], valuesDict["nexia_zone"])
+            
         return (valid, valuesDict, errorsDict)
 
     ########################################
@@ -248,6 +272,7 @@ class Plugin(indigo.PluginBase):
         if dev.deviceTypeId == 'NexiaAccount':
             account = NexiaAccount(int(dev.pluginProps['house_id']), dev.pluginProps['username'], dev.pluginProps['password'], True, self.updateFrequency)
             if not account:
+                self.logger.warning("{}: deviceStartComm error creating device".format(dev.name))
                 dev.updateStateOnServer(key="authenticated", value=False)
                 return
            
@@ -256,11 +281,22 @@ class Plugin(indigo.PluginBase):
                             
         elif dev.deviceTypeId == 'NexiaThermostat':
 
-            thermostat =  NexiaThermostat(int(dev.pluginProps['account']), int(dev.pluginProps['address']))
+            thermostat =  NexiaThermostat(dev.id, int(dev.pluginProps['nexia_account']), int(dev.pluginProps['nexia_thermostat']))
             if not thermostat:
+                self.logger.warning("{}: deviceStartComm error creating device".format(dev.name))
                 return
 
             self.nexia_thermostats[dev.id] = thermostat
+            self.update_needed = True
+            
+        elif dev.deviceTypeId == 'NexiaZone':
+
+            zone =  NexiaZone(dev.id, int(dev.pluginProps['nexia_account']), int(dev.pluginProps['nexia_thermostat']), int(dev.pluginProps['nexia_zone']))
+            if not zone:
+                self.logger.warning("{}: deviceStartComm error creating device".format(dev.name))
+                return
+
+            self.nexia_zones[dev.id] = zone
             self.update_needed = True
             
 
@@ -276,6 +312,10 @@ class Plugin(indigo.PluginBase):
             if dev.id in self.nexia_thermostats:
                 del self.nexia_thermostats[dev.id]
  
+        elif dev.deviceTypeId == 'NexiaZone':
+            if dev.id in self.nexia_zones:
+                del self.nexia_zones[dev.id]
+ 
 
     ########################################
     # Thermostat Action callbacks
@@ -288,35 +328,25 @@ class Plugin(indigo.PluginBase):
         else:
             self.logger.warning(u"{}: Unimplemented action.deviceAction: {}".format(dev.name, action.deviceAction))
 
+
     def actionControlThermostat(self, action, dev):
         self.logger.debug(u"{}: action.thermostatAction: {}".format(dev.name, action.thermostatAction))
         
        ###### SET HVAC MODE ######
         if action.thermostatAction == indigo.kThermostatAction.SetHvacMode:
             hvac_mode = kHvacModeEnumToStrMap.get(action.actionMode, u"unknown")
-            self.logger.debug(u"{} ({}): Mode set to: {}".format(dev.name, dev.address, hvac_mode))
+            self.logger.debug(u"{}: HVAC mode set to: {}".format(dev.name, hvac_mode))
 
-            self.nexia_thermostats[dev.id].set_hvac_mode(hvac_mode)
+            self.nexia_zones[dev.id].set_zone_mode(hvac_mode)
             self.update_needed = True
-            if "hvacOperationMode" in dev.states:
-                dev.updateStateOnServer("hvacOperationMode", newHvacMode)
 
         ###### SET FAN MODE ######
         elif action.thermostatAction == indigo.kThermostatAction.SetFanMode:
        
-            newFanMode = kFanModeEnumToStrMap.get(action.actionMode, u"auto")
-        
-            if newFanMode == u"on":
-                self.logger.info(u'{}: set fan to ON, leave cool at {} and heat at {}'.format(dev.name, dev.coolSetpoint,dev.heatSetpoint))
-                self.nexia_thermostats[dev.id].set_hold_temp_with_fan(dev.coolSetpoint, dev.heatSetpoint, holdType)
-
-            if newFanMode == u"auto":
-                self.logger.info(u'{}: resume normal program to set fan to Auto'.format(dev.name))
-                self.nexia_thermostats[dev.id].resume_program()
-
+            fan_mode = kFanModeEnumToStrMap.get(action.actionMode, u"auto")
+            self.logger.debug(u"{}: Fan mode set to: {}".format(dev.name, fan_mode))
+            self.nexia_thermostats[dev.id].set_fan_mode(fan_mode)        
             self.update_needed = True
-            if stateKey in dev.states:
-                dev.updateStateOnServer(u"hvacFanIsOn", action.actionMode, uiValue="True")
 
         ###### SET COOL SETPOINT ######
         elif action.thermostatAction == indigo.kThermostatAction.SetCoolSetpoint:
@@ -364,18 +394,13 @@ class Plugin(indigo.PluginBase):
 
         if stateKey == u"setpointCool":
             self.logger.info(u'{}: set cool to: {} and leave heat at: {}'.format(dev.name, newSetpoint, dev.heatSetpoint))
-            self.nexia_thermostats[dev.id].set_hold_temp(newSetpoint, dev.heatSetpoint, holdType)
-
+            self.nexia_zones[dev.id].set_zone_heat_cool_temp(dev.heatSetpoint, newSetpoint)
         elif stateKey == u"setpointHeat":
             self.logger.info(u'{}: set heat to: {} and leave cool at: {}'.format(dev.name, newSetpoint,dev.coolSetpoint))
-            self.nexia_thermostats[dev.id].set_hold_temp(dev.coolSetpoint, newSetpoint, holdType)
-
+            self.nexia_zones[dev.id].set_zone_heat_cool_temp(newSetpoint, dev.coolSetpoint)
         else:
-            self.logger.error(u'{}: handleChangeSetpointAction Invalid operation - {}'.format(dev.name, stateKey))
-        
+            self.logger.error(u'{}: handleChangeSetpointAction Invalid operation - {}'.format(dev.name, stateKey))       
         self.update_needed = True
-        if stateKey in dev.states:
-            dev.updateStateOnServer(stateKey, newSetpoint, uiValue="%.1f °F" % (newSetpoint))
 
     ########################################
     # Menu callbacks
