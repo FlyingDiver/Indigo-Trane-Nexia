@@ -230,7 +230,25 @@ class Plugin(indigo.PluginBase):
         errorsDict = indigo.Dict()
         valid = True
         
-        if typeId == "NexiaThermostat":
+        if typeId == "NexiaAccount":
+            if len(valuesDict["username"]) == 0:
+                errorsDict["username"] = "No username provided"
+                self.logger.warning("validateDeviceConfigUi - No username provided")
+                valid = False
+
+            if len(valuesDict["password"]) == 0:
+                errorsDict["password"] = "No password provided"
+                self.logger.warning("validateDeviceConfigUi - No password provided")
+                valid = False
+
+            if len(valuesDict["house_id"]) == 0:
+                errorsDict["house_id"] = "No house_id provided"
+                self.logger.warning("validateDeviceConfigUi - No house_id provided")
+                valid = False
+
+            valuesDict["address"] = valuesDict["house_id"]
+
+        elif typeId == "NexiaThermostat":
             if valuesDict["nexia_account"] == 0:
                 errorsDict["nexia_account"] = "No Nexia Account Specified"
                 self.logger.warning("validateDeviceConfigUi - No Nexia Account Specified")
@@ -241,7 +259,7 @@ class Plugin(indigo.PluginBase):
                 self.logger.warning("validateDeviceConfigUi - No Thermostat Specified")
                 valid = False              
 
-            valuesDict["address"] = "{}".format(valuesDict["nexia_thermostat"])
+            valuesDict["address"] = valuesDict["nexia_thermostat"]
 
         elif typeId == "NexiaZone":            
             if valuesDict["nexia_account"] == 0:

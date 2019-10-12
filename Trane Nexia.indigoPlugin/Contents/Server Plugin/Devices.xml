@@ -10,19 +10,19 @@
             <Field id="password" type="textfield" secure="true">
                 <Label>Password:</Label>
             </Field>
-            <Field id="address" type="textfield">
+            <Field id="house_id" type="textfield">
                 <Label>House ID:</Label>
             </Field>
             <Field id="house_idNote" type="label" fontSize="small" fontColor="darkgray">
                 <Label>Your house_id. You can get this from logging in and looking at the url once you're looking at your climate device. 
                 https://www.mynexia.com/houses/&lt;house_id&gt;/climate</Label>
             </Field>
-            <Field id="authStatus" type="textfield" readonly="true">
+            <Field id="authStatus" type="textfield">
                 <Label>Authentication Status:</Label>
             </Field>
         </ConfigUI>
         <States>
-            <State id="authenticated" readonly="true">
+            <State id="authenticated">
                 <ValueType boolType="YesNo">Boolean</ValueType>
                 <TriggerLabel>Authenticated</TriggerLabel>
                 <ControlPageLabel>Authenticated</ControlPageLabel>
@@ -53,92 +53,97 @@
             </Field>
         </ConfigUI>
          <States>
-            <State id="thermostat_model" readonly="true">
+            <State id="thermostat_name">
+                <ValueType>String</ValueType>
+                <TriggerLabel>thermostat_name</TriggerLabel>
+                <ControlPageLabel>thermostat_name</ControlPageLabel>
+            </State>
+            <State id="thermostat_model">
                 <ValueType>String</ValueType>
                 <TriggerLabel>thermostat_model</TriggerLabel>
                 <ControlPageLabel>thermostat_model</ControlPageLabel>
             </State>
-            <State id="thermostat_firmware" readonly="true">
+            <State id="thermostat_firmware">
                 <ValueType>String</ValueType>
                 <TriggerLabel>thermostat_firmware</TriggerLabel>
                 <ControlPageLabel>thermostat_firmware</ControlPageLabel>
             </State>
-            <State id="thermostat_type" readonly="true">
+            <State id="thermostat_type">
                 <ValueType>String</ValueType>
                 <TriggerLabel>thermostat_type</TriggerLabel>
                 <ControlPageLabel>thermostat_type</ControlPageLabel>
             </State>
-            <State id="fan_mode" readonly="true">
+            <State id="fan_mode">
                 <ValueType>String</ValueType>
                 <TriggerLabel>fan_mode</TriggerLabel>
                 <ControlPageLabel>fan_mode</ControlPageLabel>
             </State>
-            <State id="fan_speed" readonly="true">
+            <State id="fan_speed">
                 <ValueType>String</ValueType>
                 <TriggerLabel>fan_speed</TriggerLabel>
                 <ControlPageLabel>fan_speed</ControlPageLabel>
             </State>
-            <State id="outdoor_temperature" readonly="true">
+            <State id="outdoor_temperature">
                 <ValueType>String</ValueType>
                 <TriggerLabel>outdoor_temperature</TriggerLabel>
                 <ControlPageLabel>outdoor_temperature</ControlPageLabel>
             </State>
-            <State id="dehumidify_setpoint" readonly="true">
+            <State id="dehumidify_setpoint">
                 <ValueType>String</ValueType>
                 <TriggerLabel>dehumidify_setpoint</TriggerLabel>
                 <ControlPageLabel>dehumidify_setpoint</ControlPageLabel>
             </State>
-            <State id="system_status" readonly="true">
+            <State id="system_status">
                 <ValueType>String</ValueType>
                 <TriggerLabel>system_status</TriggerLabel>
                 <ControlPageLabel>system_status</ControlPageLabel>
             </State>
-            <State id="compressor_speed" readonly="true">
+            <State id="compressor_speed">
                 <ValueType>String</ValueType>
                 <TriggerLabel>compressor_speed</TriggerLabel>
                 <ControlPageLabel>compressor_speed</ControlPageLabel>
             </State>
-            <State id="requested_compressor_speed" readonly="true">
+            <State id="requested_compressor_speed">
                 <ValueType>String</ValueType>
                 <TriggerLabel>requested_compressor_speed</TriggerLabel>
                 <ControlPageLabel>requested_compressor_speed</ControlPageLabel>
             </State>
-            <State id="air_cleaner_mode" readonly="true">
+            <State id="air_cleaner_mode">
                 <ValueType>String</ValueType>
                 <TriggerLabel>air_cleaner_mode</TriggerLabel>
                 <ControlPageLabel>air_cleaner_mode</ControlPageLabel>
             </State>
-            <State id="has_outdoor_temperature" readonly="true">
+            <State id="has_outdoor_temperature">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>has_outdoor_temperature</TriggerLabel>
                 <ControlPageLabel>has_outdoor_temperature</ControlPageLabel>
             </State>
-            <State id="has_relative_humidity" readonly="true">
+            <State id="has_relative_humidity">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>has_relative_humidity</TriggerLabel>
                 <ControlPageLabel>has_relative_humidity</ControlPageLabel>
             </State>
-            <State id="has_variable_speed_compressor" readonly="true">
+            <State id="has_variable_speed_compressor">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>has_variable_speed_compressor</TriggerLabel>
                 <ControlPageLabel>has_variable_speed_compressor</ControlPageLabel>
             </State>
-            <State id="has_emergency_heat" readonly="true">
+            <State id="has_emergency_heat">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>has_emergency_heat</TriggerLabel>
                 <ControlPageLabel>has_emergency_heat</ControlPageLabel>
             </State>
-            <State id="has_variable_fan_speed" readonly="true">
+            <State id="has_variable_fan_speed">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>has_variable_fan_speed</TriggerLabel>
                 <ControlPageLabel>has_variable_fan_speed</ControlPageLabel>
             </State>
-            <State id="is_blower_active" readonly="true">
+            <State id="is_blower_active">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>is_blower_active</TriggerLabel>
                 <ControlPageLabel>is_blower_active</ControlPageLabel>
             </State>
-            <State id="is_emergency_heat_active" readonly="true">
+            <State id="is_emergency_heat_active">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>is_emergency_heat_active</TriggerLabel>
                 <ControlPageLabel>is_emergency_heat_active</ControlPageLabel>
@@ -173,37 +178,42 @@
             </Field>
         </ConfigUI>
         <States>
-            <State id="zone_status" readonly="true">
+            <State id="zone_name">
+                <ValueType>String</ValueType>
+                <TriggerLabel>zone_name</TriggerLabel>
+                <ControlPageLabel>zone_name</ControlPageLabel>
+            </State>
+            <State id="zone_status">
                 <ValueType>String</ValueType>
                 <TriggerLabel>zone_status</TriggerLabel>
                 <ControlPageLabel>zone_status</ControlPageLabel>
             </State>
-            <State id="zone_called" readonly="true">
+            <State id="zone_called">
                 <ValueType>String</ValueType>
                 <TriggerLabel>zone_called</TriggerLabel>
                 <ControlPageLabel>zone_called</ControlPageLabel>
             </State>
-            <State id="zone_preset" readonly="true">
+            <State id="zone_preset">
                 <ValueType>String</ValueType>
                 <TriggerLabel>zone_preset</TriggerLabel>
                 <ControlPageLabel>zone_preset</ControlPageLabel>
             </State>
-            <State id="zone_setpoint_status" readonly="true">
+            <State id="zone_setpoint_status">
                 <ValueType>String</ValueType>
                 <TriggerLabel>zone_setpoint_status</TriggerLabel>
                 <ControlPageLabel>zone_setpoint_status</ControlPageLabel>
             </State>
-            <State id="requested_mode" readonly="true">
+            <State id="requested_mode">
                 <ValueType>String</ValueType>
                 <TriggerLabel>requested_mode</TriggerLabel>
                 <ControlPageLabel>requested_mode</ControlPageLabel>
             </State>
-            <State id="is_zone_calling" readonly="true">
+            <State id="is_zone_calling">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>is_zone_calling</TriggerLabel>
                 <ControlPageLabel>is_zone_calling</ControlPageLabel>
             </State>
-            <State id="is_zone_in_permanent_hold" readonly="true">
+            <State id="is_zone_in_permanent_hold">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>is_zone_in_permanent_hold</TriggerLabel>
                 <ControlPageLabel>is_zone_in_permanent_hold</ControlPageLabel>

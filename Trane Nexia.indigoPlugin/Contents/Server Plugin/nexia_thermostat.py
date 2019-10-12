@@ -1188,8 +1188,7 @@ class NexiaThermostat:
         :return:
         """
 
-        dt_holdtime = datetime.datetime.now() + datetime.timedelta(
-            seconds=holdtime)
+        dt_holdtime = datetime.datetime.now() + datetime.timedelta(seconds=holdtime)
 
         holdtime = round(datetime.datetime.timestamp(dt_holdtime) * 1e3)
 

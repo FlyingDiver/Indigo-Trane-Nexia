@@ -58,6 +58,7 @@ class NexiaThermostat:
                     
         update_list = []
         
+        update_list.append({'key' : "thermostat_name", 'value' : self.account.get_thermostat_name(self.thermostat_id)})
         update_list.append({'key' : "thermostat_model", 'value' : self.account.get_thermostat_model(self.thermostat_id)})
         update_list.append({'key' : "thermostat_firmware", 'value' : self.account.get_thermostat_firmware(self.thermostat_id)})
         update_list.append({'key' : "thermostat_type", 'value' : self.account.get_thermostat_type(self.thermostat_id)})        
@@ -161,6 +162,9 @@ class NexiaZone:
         hvacMode = self.account.get_zone_current_mode(self.thermostat_id, self.zone_id)
         update_list.append({'key' : "hvacOperationMode", 'value' : HVAC_MODE_MAP[hvacMode]})
 
+        zone_name = self.account.get_zone_name(self.thermostat_id, self.zone_id)
+        update_list.append({'key' : "zone_name", 'value' : zone_name})
+        
         zone_status = self.account.get_zone_status(self.thermostat_id, self.zone_id)
         update_list.append({'key' : "zone_status", 'value' : zone_status})
         
