@@ -10,4 +10,42 @@
 -->
 <Actions>
     <SupportURL>https://forums.indigodomo.com/viewforum.php?f=295</SupportURL>
+    <Action id="setAirCleanerMode" deviceFilter="self.NexiaThermostat">
+        <Name>Set Air Cleaner Mode Program</Name>
+        <CallbackMethod>setAirCleanerModeAction</CallbackMethod>
+        <ConfigUI>
+            <Field id="cleaner_mode" type="menu">
+                <Label>Air Cleaner Mode:</Label>
+                 <List class="self" filter="" method="airCleanerModeGenerator" dynamicReload="true"/>
+            </Field>
+        </ConfigUI>
+    </Action>    
+    <Action id="setDehumidifySetpoint" deviceFilter="self.NexiaThermostat">
+        <Name>Set Dehumidify Setpoint</Name>
+        <CallbackMethod>setDehumidifySetpointAction</CallbackMethod>
+        <ConfigUI>
+            <Field id="dehumidify_setpoint" type="textfield">
+                <Label>Dehumidify Setpoint (%):</Label>
+            </Field>
+        </ConfigUI>
+    </Action>    
+    <Action id="setFollowSchedule" deviceFilter="self.NexiaThermostat">
+        <Name>Enabled Scheduled Program Changes</Name>
+        <CallbackMethod>setFollowScheduleAction</CallbackMethod>
+        <ConfigUI>
+            <Field id="schedules_enabled" type="checkbox">
+                <Label>Scheduled Programs Enabled:</Label>
+            </Field>
+        </ConfigUI>
+    </Action>    
+
+    <Action id="zoneReturnToSchedule" deviceFilter="self.NexiaZone">
+        <Name>Zone Return to Scheduled Operation</Name>
+        <CallbackMethod>zoneReturnToScheduleAction</CallbackMethod>
+    </Action>    
+
+    <Action id="zoneSetHold" deviceFilter="self.NexiaZone">
+        <Name>Zone Set Hold</Name>
+        <CallbackMethod>zoneSetHoldAction</CallbackMethod>
+    </Action>    
 </Actions>

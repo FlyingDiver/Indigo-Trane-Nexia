@@ -412,4 +412,61 @@ class Plugin(indigo.PluginBase):
             self.logger.debug("{}: {}".format(indigo.devices[accountID].name, account._get_thermostat_json()))
         return True
 
+    ########################################
+    # Action callbacks
+    ########################################
+
+    # Thermostat callbacks
+    
+    def airCleanerModeGenerator(self, filter, valuesDict, typeId, targetId):                                                                                                                 
+        self.logger.debug(u"airCleanerModeGenerator: typeId = {}, targetId = {}".format(typeId, targetId)) 
+        return [ (mode, mode) for mode in NexiaAccount.AIR_CLEANER_MODES ]
+
+    def setAirCleanerModeAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+        mode = pluginAction.props.get("cleaner_mode", "auto")
+        self.logger.debug(u"{}: actionSetAirCleanerMode: {}".format(thermostatDevice.name, mode))
+        self.nexia_thermostats[thermostatDevice.id].set_air_cleaner(mode)
+                 
+    def setDehumidifySetpointAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+        setpoint = pluginAction.props.get("dehumidify_setpoint", "50")
+        self.logger.debug(u"{}: setDehumidifySetpointAction: {}%".format(thermostatDevice.name, setpoint))
+        self.nexia_thermostats[thermostatDevice.id].set_dehumidify_setpoint(float(setpoint) / 100.0)
+                
+    def setFollowScheduleAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+        enabled = pluginAction.props.get("schedules_enabled", False)
+        self.logger.debug(u"{}: setFollowScheduleAction: {}".format(thermostatDevice.name, enabled))
+        self.nexia_thermostats[thermostatDevice.id].set_follow_schedule(enabled)
+ 
+    # Zone callbacks
+    
+    def zoneReturnToScheduleAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+        self.logger.debug(u"{}: zoneReturnToScheduleAction".format(thermostatDevice.name))
+        self.nexia_zones[thermostatDevice.id].call_return_to_schedule()
+        
+    def zoneSetHoldAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+        self.logger.debug(u"{}: zoneSetHoldAction".format(thermostatDevice.name))
+        self.nexia_zones[thermostatDevice.id].call_permanent_hold()
+                
+         
+############################################################################
+# 
+#     def pickThermostat(self, filter=None, valuesDict=None, typeId=0):
+#         retList = []
+#         for dev in indigo.devices.iter("self"):
+#             if dev.deviceTypeId == 'NexiaThermostat':
+#                 retList.append((dev.id, dev.name))
+#         retList.sort(key=lambda tup: tup[1])
+#         return retList
+# 
+#     def pickZone(self, filter=None, valuesDict=None, typeId=0):
+#         retList = []
+#         for dev in indigo.devices.iter("self"):
+#             if dev.deviceTypeId == 'NexiaZone':
+#                 retList.append((dev.id, dev.name))
+#         retList.sort(key=lambda tup: tup[1])
+#         return retList
+#
+############################################################################
+
+
 

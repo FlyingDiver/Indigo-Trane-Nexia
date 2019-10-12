@@ -88,11 +88,6 @@
                 <TriggerLabel>dehumidify_setpoint</TriggerLabel>
                 <ControlPageLabel>dehumidify_setpoint</ControlPageLabel>
             </State>
-            <State id="blowerOn" readonly="true">
-                <ValueType>String</ValueType>
-                <TriggerLabel>blowerOn</TriggerLabel>
-                <ControlPageLabel>blowerOn</ControlPageLabel>
-            </State>
             <State id="system_status" readonly="true">
                 <ValueType>String</ValueType>
                 <TriggerLabel>system_status</TriggerLabel>
@@ -103,10 +98,50 @@
                 <TriggerLabel>compressor_speed</TriggerLabel>
                 <ControlPageLabel>compressor_speed</ControlPageLabel>
             </State>
+            <State id="requested_compressor_speed" readonly="true">
+                <ValueType>String</ValueType>
+                <TriggerLabel>requested_compressor_speed</TriggerLabel>
+                <ControlPageLabel>requested_compressor_speed</ControlPageLabel>
+            </State>
             <State id="air_cleaner_mode" readonly="true">
                 <ValueType>String</ValueType>
                 <TriggerLabel>air_cleaner_mode</TriggerLabel>
                 <ControlPageLabel>air_cleaner_mode</ControlPageLabel>
+            </State>
+            <State id="has_outdoor_temperature" readonly="true">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>has_outdoor_temperature</TriggerLabel>
+                <ControlPageLabel>has_outdoor_temperature</ControlPageLabel>
+            </State>
+            <State id="has_relative_humidity" readonly="true">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>has_relative_humidity</TriggerLabel>
+                <ControlPageLabel>has_relative_humidity</ControlPageLabel>
+            </State>
+            <State id="has_variable_speed_compressor" readonly="true">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>has_variable_speed_compressor</TriggerLabel>
+                <ControlPageLabel>has_variable_speed_compressor</ControlPageLabel>
+            </State>
+            <State id="has_emergency_heat" readonly="true">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>has_emergency_heat</TriggerLabel>
+                <ControlPageLabel>has_emergency_heat</ControlPageLabel>
+            </State>
+            <State id="has_variable_fan_speed" readonly="true">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>has_variable_fan_speed</TriggerLabel>
+                <ControlPageLabel>has_variable_fan_speed</ControlPageLabel>
+            </State>
+            <State id="is_blower_active" readonly="true">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>is_blower_active</TriggerLabel>
+                <ControlPageLabel>is_blower_active</ControlPageLabel>
+            </State>
+            <State id="is_emergency_heat_active" readonly="true">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>is_emergency_heat_active</TriggerLabel>
+                <ControlPageLabel>is_emergency_heat_active</ControlPageLabel>
             </State>
         </States>
    </Device>
@@ -148,10 +183,30 @@
                 <TriggerLabel>zone_called</TriggerLabel>
                 <ControlPageLabel>zone_called</ControlPageLabel>
             </State>
+            <State id="zone_preset" readonly="true">
+                <ValueType>String</ValueType>
+                <TriggerLabel>zone_preset</TriggerLabel>
+                <ControlPageLabel>zone_preset</ControlPageLabel>
+            </State>
+            <State id="zone_setpoint_status" readonly="true">
+                <ValueType>String</ValueType>
+                <TriggerLabel>zone_setpoint_status</TriggerLabel>
+                <ControlPageLabel>zone_setpoint_status</ControlPageLabel>
+            </State>
             <State id="requested_mode" readonly="true">
                 <ValueType>String</ValueType>
                 <TriggerLabel>requested_mode</TriggerLabel>
                 <ControlPageLabel>requested_mode</ControlPageLabel>
+            </State>
+            <State id="is_zone_calling" readonly="true">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>is_zone_calling</TriggerLabel>
+                <ControlPageLabel>is_zone_calling</ControlPageLabel>
+            </State>
+            <State id="is_zone_in_permanent_hold" readonly="true">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>is_zone_in_permanent_hold</TriggerLabel>
+                <ControlPageLabel>is_zone_in_permanent_hold</ControlPageLabel>
             </State>
         </States>
     </Device>

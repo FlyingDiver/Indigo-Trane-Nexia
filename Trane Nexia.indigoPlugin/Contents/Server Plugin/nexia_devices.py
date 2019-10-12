@@ -58,54 +58,51 @@ class NexiaThermostat:
                     
         update_list = []
         
-        thermostat_model = self.account.get_thermostat_model(self.thermostat_id)        
-        update_list.append({'key' : "thermostat_model", 'value' : thermostat_model})
-        
-        thermostat_firmware = self.account.get_thermostat_firmware(self.thermostat_id)        
-        update_list.append({'key' : "thermostat_firmware", 'value' : thermostat_firmware})
-        
-        thermostat_type = self.account.get_thermostat_type(self.thermostat_id)        
-        update_list.append({'key' : "thermostat_type", 'value' : thermostat_type})
-        
-        fan_mode = self.account.get_fan_mode(self.thermostat_id)        
-        update_list.append({'key' : "fan_mode", 'value' : fan_mode})
-        
-        fan_speed = self.account.get_fan_speed_setpoint(self.thermostat_id)        
-        update_list.append({'key' : "fan_speed", 'value' : fan_speed})
-        
-        outdoor_temperature = self.account.get_outdoor_temperature(self.thermostat_id)        
-        update_list.append({'key' : "outdoor_temperature", 'value' : outdoor_temperature})
-        
-        humidity = self.account.get_relative_humidity(self.thermostat_id) 
-        update_list.append({'key' : "humidityInput1", 'value' : (humidity * 100.0)})
-        
-        dehumidify_setpoint = self.account.get_dehumidify_setpoint(self.thermostat_id)        
-        update_list.append({'key' : "dehumidify_setpoint", 'value' : dehumidify_setpoint})
-        
-        blowerOn = self.account.is_blower_active(self.thermostat_id)
-        update_list.append({'key' : "blowerOn", 'value' : blowerOn})
+        update_list.append({'key' : "thermostat_model", 'value' : self.account.get_thermostat_model(self.thermostat_id)})
+        update_list.append({'key' : "thermostat_firmware", 'value' : self.account.get_thermostat_firmware(self.thermostat_id)})
+        update_list.append({'key' : "thermostat_type", 'value' : self.account.get_thermostat_type(self.thermostat_id)})        
+        update_list.append({'key' : "fan_mode", 'value' : self.account.get_fan_mode(self.thermostat_id)})        
+        update_list.append({'key' : "fan_speed", 'value' : self.account.get_fan_speed_setpoint(self.thermostat_id)})        
+        update_list.append({'key' : "outdoor_temperature", 'value' : self.account.get_outdoor_temperature(self.thermostat_id)})        
+        update_list.append({'key' : "humidityInput1", 'value' : (self.account.get_relative_humidity(self.thermostat_id) * 100.0)})        
+        update_list.append({'key' : "dehumidify_setpoint", 'value' : self.account.get_dehumidify_setpoint(self.thermostat_id)})        
+        update_list.append({'key' : "system_status", 'value' : self.account.get_system_status(self.thermostat_id)})        
+        update_list.append({'key' : "compressor_speed", 'value' : self.account.get_current_compressor_speed(self.thermostat_id)})        
+        update_list.append({'key' : "requested_compressor_speed", 'value' : self.account.get_requested_compressor_speed(self.thermostat_id)})        
+        update_list.append({'key' : "air_cleaner_mode", 'value' : self.account.get_air_cleaner_mode(self.thermostat_id)})
 
-        system_status = self.account.get_system_status(self.thermostat_id)
-        update_list.append({'key' : "system_status", 'value' : system_status})
-        
-        compressor_speed = self.account.get_current_compressor_speed(self.thermostat_id)        
-        update_list.append({'key' : "compressor_speed", 'value' : compressor_speed})
-        
-        air_cleaner_mode = self.account.get_air_cleaner_mode(self.thermostat_id)        
-        update_list.append({'key' : "air_cleaner_mode", 'value' : air_cleaner_mode})
+        update_list.append({'key' : "has_outdoor_temperature", 'value' : self.account.has_outdoor_temperature(self.thermostat_id)})
+        update_list.append({'key' : "has_relative_humidity", 'value' : self.account.has_relative_humidity(self.thermostat_id)})
+        update_list.append({'key' : "has_variable_speed_compressor", 'value' : self.account.has_variable_speed_compressor(self.thermostat_id)})
+        update_list.append({'key' : "has_variable_fan_speed", 'value' : self.account.has_variable_fan_speed(self.thermostat_id) })
 
-        # hack to get compressor speed to show as 
+        update_list.append({'key' : "is_blower_active", 'value' : self.account.is_blower_active(self.thermostat_id)})
+
+        update_list.append({'key' : "has_emergency_heat", 'value' : self.account.has_emergency_heat(self.thermostat_id)})
+        if self.account.has_emergency_heat(self.thermostat_id):
+            update_list.append({'key' : "is_emergency_heat_active", 'value' : self.account.is_emergency_heat_active(self.thermostat_id)})
+
+        # hack to get compressor speed to show as device state
+        compressor_speed = self.account.get_current_compressor_speed(self.thermostat_id)
         update_list.append({'key'           : "temperatureInput1", 
                             'value'         : (compressor_speed * 100), 
                             'uiValue'       : "{}%".format(compressor_speed * 100),
                             'decimalPlaces' : 0})
-
          
         dev.updateStatesOnServer(update_list)
+
 
     def set_fan_mode(self, fan_mode):       
         self.account.set_fan_mode(fan_mode.upper(), self.thermostat_id)
 
+    def set_air_cleaner(self, air_cleaner_mode):       
+        self.account.set_air_cleaner(air_cleaner_mode, self.thermostat_id)
+
+    def set_dehumidify_setpoint(self, setpoint):       
+        self.account.set_dehumidify_setpoint(setpoint, self.thermostat_id)
+                
+    def set_follow_schedule(self, enabled):       
+        self.account.set_follow_schedule(enabled, self.thermostat_id)
 
 class NexiaZone:
 
@@ -173,6 +170,18 @@ class NexiaZone:
         requested_mode = self.account.get_zone_requested_mode(self.thermostat_id, self.zone_id)
         update_list.append({'key' : "requested_mode", 'value' : requested_mode})
               
+        zone_preset = self.account.get_zone_preset(self.thermostat_id, self.zone_id)
+        update_list.append({'key' : "zone_preset", 'value' : zone_preset})
+              
+        zone_setpoint_status = self.account.get_zone_setpoint_status(self.thermostat_id, self.zone_id)
+        update_list.append({'key' : "zone_setpoint_status", 'value' : zone_setpoint_status})
+              
+        is_zone_calling = self.account.is_zone_calling(self.thermostat_id, self.zone_id)
+        update_list.append({'key' : "is_zone_calling", 'value' : is_zone_calling})
+              
+        is_zone_in_permanent_hold = self.account.is_zone_in_permanent_hold(self.thermostat_id, self.zone_id)
+        update_list.append({'key' : "is_zone_in_permanent_hold", 'value' : is_zone_in_permanent_hold})
+              
         system_status = self.account.get_system_status(self.thermostat_id)
         if requested_mode == self.account.OPERATION_MODE_OFF:
             heatOn = False
@@ -199,8 +208,15 @@ class NexiaZone:
 
 
     def set_zone_mode(self, hvac_mode):        
-        self.account.set_zone_mode(hvac_mode.upper(), self.thermostat_id, self.zone_id)
+        self.account.set_zone_mode(hvac_mode.upper(), thermostat_id=self.thermostat_id, zone_id=self.zone_id)
 
     def set_zone_heat_cool_temp(self, heatSetpoint, coolSetpoint):        
-        self.account.set_zone_heat_cool_temp(heatSetpoint, coolSetpoint, None, self.thermostat_id, self.zone_id)
+        self.account.set_zone_heat_cool_temp(heat_temperature=heatSetpoint, cool_temperature=coolSetpoint, 
+                                                thermostat_id=self.thermostat_id, zone_id=self.zone_id)
+
+    def call_return_to_schedule(self):        
+        self.account.call_return_to_schedule(thermostat_id=self.thermostat_id, zone_id=self.zone_id)
+
+    def call_permanent_hold(self):        
+        self.account.call_permanent_hold(thermostat_id=self.thermostat_id, zone_id=self.zone_id)
 
