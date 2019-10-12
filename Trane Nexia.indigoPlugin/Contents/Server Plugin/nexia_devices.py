@@ -144,20 +144,20 @@ class NexiaZone:
         hsp = self.account.get_zone_heating_setpoint(self.thermostat_id, self.zone_id)
         update_list.append({'key'           : "setpointHeat", 
                             'value'         : hsp, 
-                            'uiValue'       : hsp,
-                            'decimalPlaces' : 1})
+                            'uiValue'       : u"{}°F".format(hsp),
+                            'decimalPlaces' : 0})
 
         csp = self.account.get_zone_cooling_setpoint(self.thermostat_id, self.zone_id)
         update_list.append({'key'           : "setpointCool", 
                             'value'         : csp, 
-                            'uiValue'       : csp,
-                            'decimalPlaces' : 1})
+                            'uiValue'       : u"{}°F".format(csp),
+                            'decimalPlaces' : 0})
 
         dispTemp = self.account.get_zone_temperature(self.thermostat_id, self.zone_id)
         update_list.append({'key'           : "temperatureInput1", 
                             'value'         : dispTemp, 
-                            'uiValue'       : dispTemp,
-                            'decimalPlaces' : 1})
+                            'uiValue'       : u"{}°F".format(dispTemp),
+                            'decimalPlaces' : 0})
 
         hvacMode = self.account.get_zone_current_mode(self.thermostat_id, self.zone_id)
         update_list.append({'key' : "hvacOperationMode", 'value' : HVAC_MODE_MAP[hvacMode]})

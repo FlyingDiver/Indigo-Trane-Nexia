@@ -17,9 +17,6 @@
                 <Label>Your house_id. You can get this from logging in and looking at the url once you're looking at your climate device. 
                 https://www.mynexia.com/houses/&lt;house_id&gt;/climate</Label>
             </Field>
-            <Field id="authStatus" type="textfield">
-                <Label>Authentication Status:</Label>
-            </Field>
         </ConfigUI>
         <States>
             <State id="authenticated">
