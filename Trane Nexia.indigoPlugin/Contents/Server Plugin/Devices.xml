@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Devices>
-    <SupportURL>https://forums.indigodomo.com/viewforum.php?f=295</SupportURL>
+    <SupportURL>https://forums.indigodomo.com/viewforum.php?f=318</SupportURL>
      <Device type="custom" id="NexiaAccount">
         <Name>Nexia User Account</Name>
         <ConfigUI>

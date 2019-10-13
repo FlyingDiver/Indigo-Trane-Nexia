@@ -9,7 +9,7 @@
      backlightBrightness state added to Devices.xml.
 -->
 <Actions>
-    <SupportURL>https://forums.indigodomo.com/viewforum.php?f=295</SupportURL>
+    <SupportURL>https://forums.indigodomo.com/viewforum.php?f=318</SupportURL>
     <Action id="setAirCleanerMode" deviceFilter="self.NexiaThermostat">
         <Name>Set Air Cleaner Mode Program</Name>
         <CallbackMethod>setAirCleanerModeAction</CallbackMethod>
@@ -59,4 +59,8 @@
             </Field>
         </ConfigUI>
     </Action>    
+    <Action id="resumeProgram" deviceFilter="self.NexiaZone">
+        <Name>Resume Program</Name>
+        <CallbackMethod>actionResumeProgram</CallbackMethod>
+    </Action>
 </Actions>
