@@ -8,6 +8,25 @@
 
 <MenuItems>
     <SupportURL>https://forums.indigodomo.com/viewforum.php?f=295</SupportURL>
+
+    <MenuItem id="menu1">
+        <Name>Resume All Schedules</Name>
+        <CallbackMethod>menuResumeAllSchedules</CallbackMethod>
+    </MenuItem>
+
+    <MenuItem id="menu2">
+        <Name>Resume Schedule for Zone</Name>
+        <CallbackMethod>menuResumeSchedule</CallbackMethod>
+        <ConfigUI>
+            <Field id="targetDevice" type="menu">
+                <Label>Select Zone:</Label>
+                <List class="self" filter="" method="pickZone" dynamicReload="true"/>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="sep1"/>
+
     <MenuItem id="menu3">
         <Name>Write Thermostat Data to Log</Name>
         <CallbackMethod>menuDumpThermostat</CallbackMethod>

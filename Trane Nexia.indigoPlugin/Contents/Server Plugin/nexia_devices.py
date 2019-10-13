@@ -222,6 +222,15 @@ class NexiaZone:
         
         dev.updateStatesOnServer(update_list)
 
+    def get_zone_presets(self):
+        return self.account.get_zone_presets(thermostat_id=self.thermostat_id, zone_id=self.zone_id)
+
+    def get_zone_preset(self):
+        return self.account.get_zone_preset(thermostat_id=self.thermostat_id, zone_id=self.zone_id)
+
+    def set_zone_preset(self, preset):
+        self.account.set_zone_preset(preset, thermostat_id=self.thermostat_id, zone_id=self.zone_id)
+
 
     def set_zone_mode(self, hvac_mode):        
         self.account.set_zone_mode(hvac_mode.upper(), thermostat_id=self.thermostat_id, zone_id=self.zone_id)

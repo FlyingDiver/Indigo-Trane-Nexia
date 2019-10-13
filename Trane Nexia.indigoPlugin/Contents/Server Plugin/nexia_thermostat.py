@@ -980,10 +980,10 @@ class NexiaThermostat:
         implementation
         :return:
         """
-        # return self._get_zone_key("presets", zone_id=zone_id)
+        return self._get_zone_key("presets", zone_id=zone_id)
         # Can't get Nexia to return all of the presets occasionally, but I
         # don't think there would be any other "presets" available anyway...
-        return self.PRESET_MODES
+        # return self.PRESET_MODES
 
     def get_zone_preset(self, thermostat_id=None, zone_id=0):
         """

@@ -171,7 +171,7 @@ class Plugin(indigo.PluginBase):
                 device_list.insert(0, (dev.pluginProps["nexia_thermostat"], dev.name))
             except:
                 pass
-                                                          
+                                                
         self.logger.debug("get_thermostat_list: device_list for {} ({}) = {}".format(typeId, filter, device_list))
         return device_list     
         
@@ -216,6 +216,7 @@ class Plugin(indigo.PluginBase):
                         
         self.logger.debug("get_zone_list: device_list for {} ({}) = {}".format(typeId, filter, device_list))
         return device_list     
+
 
 
     # doesn't do anything, just needed to force other menus to dynamically refresh
@@ -280,7 +281,7 @@ class Plugin(indigo.PluginBase):
             valuesDict["address"] = "{}:{}".format(valuesDict["nexia_thermostat"], valuesDict["nexia_zone"])
             
         return (valid, valuesDict, errorsDict)
-
+        
     ########################################
         
     def deviceStartComm(self, dev):
@@ -424,11 +425,31 @@ class Plugin(indigo.PluginBase):
     # Menu callbacks
     ########################################
     
+    def menuResumeAllSchedules(self):
+        self.logger.debug(u"menuResumeAllSchedules")
+        for devId, zone in self.nexia_zones.items():
+            zone.call_return_to_schedule()
+        return True
+
+
+    def menuResumeSchedule(self, valuesDict, typeId):
+        self.logger.debug(u"menuResumeSchedule")
+        try:
+            deviceId = int(valuesDict["targetDevice"])
+        except:
+            self.logger.error(u"Bad Device specified for Resume Schedule operation")
+            return False
+
+        self.nexia_zones[deviceId].call_return_to_schedule()
+        return True
+        
     def menuDumpThermostat(self):
         self.logger.debug(u"menuDumpThermostat")
         for accountID, account in self.nexia_accounts.items():
-            self.logger.debug("{}: {}".format(indigo.devices[accountID].name, account._get_thermostat_json()))
+            data = account._get_thermostat_json()
+            self.logger.debug("{}: Data Dump\n{}".format(indigo.devices[accountID].name, json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))))
         return True
+        
 
     ########################################
     # Action callbacks
@@ -457,6 +478,11 @@ class Plugin(indigo.PluginBase):
  
     # Zone callbacks
     
+    def zonePresetGenerator(self, filter, valuesDict, typeId, targetId):                                                                                                                 
+        self.logger.debug(u"zonePresetGenerator: typeId = {}, targetId = {}, valuesDict= {}".format(typeId, targetId, valuesDict)) 
+        zone = self.nexia_zones[int(targetId)]
+        return [ (preset, preset) for preset in zone.get_zone_presets() ]
+               
     def zoneReturnToScheduleAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
         self.logger.debug(u"{}: zoneReturnToScheduleAction".format(thermostatDevice.name))
         self.nexia_zones[thermostatDevice.id].call_return_to_schedule()
@@ -464,6 +490,11 @@ class Plugin(indigo.PluginBase):
     def zoneSetHoldAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
         self.logger.debug(u"{}: zoneSetHoldAction".format(thermostatDevice.name))
         self.nexia_zones[thermostatDevice.id].call_permanent_hold()
+                
+    def zoneSetPresetAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+        preset = pluginAction.props.get("zone_preset", None)
+        self.logger.debug(u"{}: zoneSetPresetAction: {}".format(thermostatDevice.name, preset))
+        self.nexia_zones[thermostatDevice.id].set_zone_preset(preset)
                 
          
 ############################################################################
@@ -475,15 +506,15 @@ class Plugin(indigo.PluginBase):
 #                 retList.append((dev.id, dev.name))
 #         retList.sort(key=lambda tup: tup[1])
 #         return retList
-# 
-#     def pickZone(self, filter=None, valuesDict=None, typeId=0):
-#         retList = []
-#         for dev in indigo.devices.iter("self"):
-#             if dev.deviceTypeId == 'NexiaZone':
-#                 retList.append((dev.id, dev.name))
-#         retList.sort(key=lambda tup: tup[1])
-#         return retList
-#
+ 
+    def pickZone(self, filter=None, valuesDict=None, typeId=0):
+        retList = []
+        for dev in indigo.devices.iter("self"):
+            if dev.deviceTypeId == 'NexiaZone':
+                retList.append((dev.id, dev.name))
+        retList.sort(key=lambda tup: tup[1])
+        return retList
+
 ############################################################################
 
 

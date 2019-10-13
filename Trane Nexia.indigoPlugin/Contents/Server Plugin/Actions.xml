@@ -48,4 +48,15 @@
         <Name>Zone Set Hold</Name>
         <CallbackMethod>zoneSetHoldAction</CallbackMethod>
     </Action>    
+    
+    <Action id="zoneSetPreset" deviceFilter="self.NexiaZone">
+        <Name>Select Zone Preset</Name>
+        <CallbackMethod>zoneSetPresetAction</CallbackMethod>
+        <ConfigUI>
+            <Field id="zone_preset" type="menu">
+                <Label>Select Zone Preset:</Label>
+                 <List class="self" filter="" method="zonePresetGenerator" dynamicReload="true"/>
+            </Field>
+        </ConfigUI>
+    </Action>    
 </Actions>
