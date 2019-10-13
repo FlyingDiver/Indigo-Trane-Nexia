@@ -63,36 +63,48 @@ class NexiaThermostat:
         update_list.append({'key' : "thermostat_firmware", 'value' : self.account.get_thermostat_firmware(self.thermostat_id)})
         update_list.append({'key' : "thermostat_type", 'value' : self.account.get_thermostat_type(self.thermostat_id)})        
         update_list.append({'key' : "fan_mode", 'value' : self.account.get_fan_mode(self.thermostat_id)})        
-        update_list.append({'key' : "fan_speed", 'value' : self.account.get_fan_speed_setpoint(self.thermostat_id)})        
         update_list.append({'key' : "outdoor_temperature", 'value' : self.account.get_outdoor_temperature(self.thermostat_id)})        
-        update_list.append({'key' : "humidityInput1", 'value' : (self.account.get_relative_humidity(self.thermostat_id) * 100.0)})        
         update_list.append({'key' : "dehumidify_setpoint", 'value' : self.account.get_dehumidify_setpoint(self.thermostat_id)})        
         update_list.append({'key' : "system_status", 'value' : self.account.get_system_status(self.thermostat_id)})        
-        update_list.append({'key' : "compressor_speed", 'value' : self.account.get_current_compressor_speed(self.thermostat_id)})        
-        update_list.append({'key' : "requested_compressor_speed", 'value' : self.account.get_requested_compressor_speed(self.thermostat_id)})        
         update_list.append({'key' : "air_cleaner_mode", 'value' : self.account.get_air_cleaner_mode(self.thermostat_id)})
-
-        update_list.append({'key' : "has_outdoor_temperature", 'value' : self.account.has_outdoor_temperature(self.thermostat_id)})
-        update_list.append({'key' : "has_relative_humidity", 'value' : self.account.has_relative_humidity(self.thermostat_id)})
-        update_list.append({'key' : "has_variable_speed_compressor", 'value' : self.account.has_variable_speed_compressor(self.thermostat_id)})
-        update_list.append({'key' : "has_variable_fan_speed", 'value' : self.account.has_variable_fan_speed(self.thermostat_id) })
-
         update_list.append({'key' : "is_blower_active", 'value' : self.account.is_blower_active(self.thermostat_id)})
 
-        update_list.append({'key' : "has_emergency_heat", 'value' : self.account.has_emergency_heat(self.thermostat_id)})
-        if self.account.has_emergency_heat(self.thermostat_id):
+        has_relative_humidity = self.account.has_relative_humidity(self.thermostat_id)
+        update_list.append({'key' : "has_relative_humidity", 'value' : has_relative_humidity})
+        if has_relative_humidity:
+            update_list.append({'key' : "humidityInput1", 'value' : (self.account.get_relative_humidity(self.thermostat_id) * 100.0)})        
+
+        has_variable_fan_speed = self.account.has_variable_fan_speed(self.thermostat_id)
+        update_list.append({'key' : "has_variable_fan_speed", 'value' : has_variable_fan_speed})
+        if has_variable_fan_speed:
+            update_list.append({'key' : "fan_speed", 'value' : self.account.get_fan_speed_setpoint(self.thermostat_id)})        
+
+        has_emergency_heat = self.account.has_emergency_heat(self.thermostat_id)
+        update_list.append({'key' : "has_emergency_heat", 'value' : has_emergency_heat})
+        if has_emergency_heat:
             update_list.append({'key' : "is_emergency_heat_active", 'value' : self.account.is_emergency_heat_active(self.thermostat_id)})
 
-        # hack to get compressor speed to show as device state
-        compressor_speed = self.account.get_current_compressor_speed(self.thermostat_id)
-        update_list.append({'key'           : "temperatureInput1", 
-                            'value'         : (compressor_speed * 100), 
-                            'uiValue'       : "{}%".format(compressor_speed * 100),
-                            'decimalPlaces' : 0})
+        has_variable_speed_compressor = self.account.has_variable_speed_compressor(self.thermostat_id)
+        update_list.append({'key' : "has_variable_speed_compressor", 'value' : has_variable_speed_compressor})
+        if has_variable_speed_compressor:
+            update_list.append({'key' : "requested_compressor_speed", 'value' : self.account.get_requested_compressor_speed(self.thermostat_id)})        
+            update_list.append({'key' : "compressor_speed", 'value' : self.account.get_current_compressor_speed(self.thermostat_id)})        
          
         dev.updateStatesOnServer(update_list)
 
-
+    def has_relative_humidity(self):
+        return self.account.has_relative_humidity(self.thermostat_id)
+        
+    def has_emergency_heat(self):
+        return self.account.has_emergency_heat(self.thermostat_id)
+        
+    def has_variable_fan_speed(self):
+        return self.account.has_variable_fan_speed(self.thermostat_id)
+        
+    def has_variable_speed_compressor(self):
+        return self.account.has_variable_speed_compressor(self.thermostat_id)
+        
+        
     def set_fan_mode(self, fan_mode):       
         self.account.set_fan_mode(fan_mode.upper(), self.thermostat_id)
 
