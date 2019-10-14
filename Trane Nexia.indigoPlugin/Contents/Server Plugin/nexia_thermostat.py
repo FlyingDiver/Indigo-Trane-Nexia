@@ -9,7 +9,6 @@
 # 
 # Other modifications:
 #   use 'html.parser' for BeautifulSoup
-#   use  verify=False option for request calls because server certificates are incomplete.
 
 import datetime
 import json
@@ -171,7 +170,7 @@ class NexiaThermostat:
         if request.status_code == 302:
             # assuming its redirecting to login
             self.login()
-            request = self._put_url(url, payload, verify = False)
+            request = self._put_url(url, payload)
 
         self._check_response("Failed PUT Request:\n  Url: {}\n  Payload {}".format(url, str(payload)),request)
 
@@ -196,7 +195,7 @@ class NexiaThermostat:
         # except requests.RequestException as e:
         #     print("Error posting url", str(e))
         #     return None
-        request = self.session.post(request_url, payload, verify = False)
+        request = self.session.post(request_url, payload)
 
         if request.status_code == 302:
             # assuming its redirecting to login
@@ -224,7 +223,7 @@ class NexiaThermostat:
         # except requests.RequestException as e:
         #     print("Error getting url", str(e))
         #     return None
-        request = self.session.get(request_url, allow_redirects=False, verify = False)
+        request = self.session.get(request_url, allow_redirects=False)
 
         if request.status_code == 302:
             # assuming its redirecting to login
