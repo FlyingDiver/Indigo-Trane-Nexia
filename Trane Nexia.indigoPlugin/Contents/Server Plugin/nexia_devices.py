@@ -139,7 +139,7 @@ class NexiaZone:
         # has the Nexia account been initialized yet?
         account_dev = indigo.devices[self.account_id]
         if not account_dev.states['authenticated']:
-            self.logger.info('Nexia account not authenticated yet; not initializing state of device {}'.format(self.address))
+            self.logger.info('{}: Nexia account {} not authenticated yet; not updating device'.format(dev.name, self.account_id))
             return
         
         if not self.account:

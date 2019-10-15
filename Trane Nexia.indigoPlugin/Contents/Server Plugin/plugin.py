@@ -49,7 +49,7 @@ class Plugin(indigo.PluginBase):
                 
         self.updateFrequency = float(self.pluginPrefs.get('updateFrequency', "15")) *  60.0
         self.logger.debug(u"updateFrequency = " + str(self.updateFrequency))
-        self.next_update = time.time() + self.updateFrequency
+        self.next_update = time.time()
         
         self.nexia_accounts = {}
         self.nexia_thermostats = {}
@@ -117,7 +117,7 @@ class Plugin(indigo.PluginBase):
                     for dev in self.nexia_zones.values():
                         dev.update()
                     
-                self.sleep(2.0)
+                self.sleep(1.0)
 
         except self.StopThread:
             self.logger.debug(u"runConcurrentThread ending")
@@ -446,8 +446,12 @@ class Plugin(indigo.PluginBase):
     def menuDumpThermostat(self):
         self.logger.debug(u"menuDumpThermostat")
         for accountID, account in self.nexia_accounts.items():
-            data = account._get_thermostat_json()
-            self.logger.debug("{}: Data Dump\n{}".format(indigo.devices[accountID].name, json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))))
+            if indigo.devices[accountID].states['authenticated']:
+                data = account._get_thermostat_json()
+                self.logger.debug("{}: Data Dump\n{}".format(indigo.devices[accountID].name, json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))))
+            else:
+                self.logger.debug("{}: Data Dump aborted, account not authenticated.".format(indigo.devices[accountID].name))
+            
         return True
         
 
