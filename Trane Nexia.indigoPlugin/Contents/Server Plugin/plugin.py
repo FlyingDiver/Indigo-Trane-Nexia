@@ -103,8 +103,14 @@ class Plugin(indigo.PluginBase):
                     for accountID, account in self.nexia_accounts.items():
                         dev = indigo.devices[accountID]
                         if dev.states['authenticated']:
-                            account.update()
-                            dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+                            try:
+                                account.update()
+                            except Exception as e:
+                                dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+                                self.logger.debug("{}: Nexia account update failure: {}".format(dev.name, e))
+                            else:
+                                self.logger.debug("{}: Nexia account update successful".format(dev.name))
+                                dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
                         else:
                             dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
                             self.logger.debug("{}: Nexia account not authenticated, skipping update".format(dev.name))

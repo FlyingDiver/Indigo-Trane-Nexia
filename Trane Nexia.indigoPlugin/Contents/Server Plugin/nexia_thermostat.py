@@ -431,8 +431,7 @@ class NexiaThermostat:
         Forces a status update
         :return: None
         """
-        self._get_thermostat_json(thermostat_id=self.ALL_IDS,
-                                  force_update=True)
+        self._get_thermostat_json(thermostat_id=self.ALL_IDS, force_update=True)
 
     ########################################################################
     # Print Functions
