@@ -37,6 +37,7 @@
             <Field id="SupportsHvacOperationMode"    type="checkbox"  defaultValue="false" hidden="true"/>
             <Field id="SupportsHvacFanMode"          type="checkbox"  defaultValue="true"  hidden="true"/>
             <Field id="ShowCoolHeatEquipmentStateUI" type="checkbox"  defaultValue="true"  hidden="true"/>
+            <Field id="SupportsStatusRequest"        type="checkbox"  defaultValue="false" hidden="true"/>
 
             <Field id="nexia_account" type="menu">
                 <Label>Nexia Account:</Label>
@@ -157,6 +158,9 @@
             <Field id="SupportsHvacOperationMode"    type="checkbox"  defaultValue="true"  hidden="true"/>
             <Field id="SupportsHvacFanMode"          type="checkbox"  defaultValue="false" hidden="true"/>
             <Field id="ShowCoolHeatEquipmentStateUI" type="checkbox"  defaultValue="true"  hidden="true"/>
+            <Field id="SupportsStatusRequest"        type="checkbox"  defaultValue="false" hidden="true"/>
+
+
 
             <Field id="nexia_account" type="menu">
                 <Label>Nexia Account:</Label>

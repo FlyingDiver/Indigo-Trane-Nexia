@@ -49,13 +49,10 @@ class Plugin(indigo.PluginBase):
                 
         self.updateFrequency = float(self.pluginPrefs.get('updateFrequency', "15")) *  60.0
         self.logger.debug(u"updateFrequency = " + str(self.updateFrequency))
-        self.next_update = time.time()
         
         self.nexia_accounts = {}
         self.nexia_thermostats = {}
         self.nexia_zones = {}
-
-        self.update_needed = False
         
     def shutdown(self):
         self.logger.info(u"Stopping Trane Nexia")
@@ -65,8 +62,8 @@ class Plugin(indigo.PluginBase):
         errorDict = indigo.Dict()
 
         updateFrequency = int(valuesDict['updateFrequency'])
-        if (updateFrequency < 5) or (updateFrequency > 60):
-            errorDict['updateFrequency'] = u"Update frequency is invalid - enter a valid number (between 5 and 60)"
+        if (updateFrequency < 2) or (updateFrequency > 60):
+            errorDict['updateFrequency'] = u"Update frequency is invalid - enter a valid number (between 2 and 60)"
 
         if len(errorDict) > 0:
             return (False, valuesDict, errorDict)
@@ -84,7 +81,6 @@ class Plugin(indigo.PluginBase):
 
             self.updateFrequency = float(valuesDict['updateFrequency']) * 60.0
             self.logger.debug(u"updateFrequency = " + str(self.updateFrequency))
-            self.next_update = time.time()
 
 
     ########################################
@@ -93,37 +89,14 @@ class Plugin(indigo.PluginBase):
         self.logger.debug(u"runConcurrentThread starting")
         try:
             while True:
-                
-                if (time.time() > self.next_update) or self.update_needed:
-                    self.update_needed = False
-                    self.next_update = time.time() + self.updateFrequency
-                
-                    # update from Nexia servers
+                                    
+                for thermostat in self.nexia_thermostats.values():
+                    thermostat.update()
+            
+                for zone in self.nexia_zones.values():
+                    zone.update()
                     
-                    for accountID, account in self.nexia_accounts.items():
-                        dev = indigo.devices[accountID]
-                        if dev.states['authenticated']:
-                            try:
-                                account.update()
-                            except Exception as e:
-                                dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
-                                self.logger.debug("{}: Nexia account update failure: {}".format(dev.name, e))
-                            else:
-                                self.logger.debug("{}: Nexia account update successful".format(dev.name))
-                                dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-                        else:
-                            dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
-                            self.logger.debug("{}: Nexia account not authenticated, skipping update".format(dev.name))
-
-                    # now update the Indigo devices         
-                    
-                    for dev in self.nexia_thermostats.values():
-                        dev.update()
-                    
-                    for dev in self.nexia_zones.values():
-                        dev.update()
-                    
-                self.sleep(1.0)
+                self.sleep(60.0)
 
         except self.StopThread:
             self.logger.debug(u"runConcurrentThread ending")
@@ -293,9 +266,13 @@ class Plugin(indigo.PluginBase):
     def deviceStartComm(self, dev):
 
         self.logger.info(u"{}: Starting {} Device {}".format(dev.name, dev.deviceTypeId, dev.id))
-        
+      
         if dev.deviceTypeId == 'NexiaAccount':
-            account = NexiaAccount(int(dev.pluginProps['house_id']), dev.pluginProps['username'], dev.pluginProps['password'], True, self.updateFrequency)
+            account = NexiaAccount(int(dev.pluginProps['house_id']), 
+                        username=dev.pluginProps['username'], 
+                        password=dev.pluginProps['password'], 
+                        auto_login=True, 
+                        update_rate=self.updateFrequency)
             if not account:
                 self.logger.warning("{}: deviceStartComm error creating device".format(dev.name))
                 dev.updateStateOnServer(key="authenticated", value=False)
@@ -312,7 +289,6 @@ class Plugin(indigo.PluginBase):
                 return
 
             self.nexia_thermostats[dev.id] = thermostat
-            self.update_needed = True
             
         elif dev.deviceTypeId == 'NexiaZone':
 
@@ -322,7 +298,6 @@ class Plugin(indigo.PluginBase):
                 return
 
             self.nexia_zones[dev.id] = zone
-            self.update_needed = True
             
 
     def deviceStopComm(self, dev):
@@ -348,10 +323,7 @@ class Plugin(indigo.PluginBase):
        
     def actionControlUniversal(self, action, dev):
         self.logger.debug(u"{}: action.actionControlUniversal: {}".format(dev.name, action.deviceAction))
-        if action.deviceAction == indigo.kUniversalAction.RequestStatus:
-            self.update_needed = True
-        else:
-            self.logger.warning(u"{}: Unimplemented action.deviceAction: {}".format(dev.name, action.deviceAction))
+        self.logger.warning(u"{}: Unimplemented action.deviceAction: {}".format(dev.name, action.deviceAction))
 
 
     def actionControlThermostat(self, action, dev):

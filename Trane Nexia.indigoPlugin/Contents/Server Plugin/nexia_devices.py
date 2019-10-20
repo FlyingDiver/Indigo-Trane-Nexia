@@ -40,7 +40,7 @@ class NexiaThermostat:
 
     def update(self):
         dev = indigo.devices[self.device_id]
-        self.logger.debug(u"{}: Update".format(dev.name))
+        self.logger.threaddebug(u"{}: Update".format(dev.name))
         
         # has the Nexia account been initialized yet?
         account_dev = indigo.devices[self.account_id]
@@ -134,7 +134,7 @@ class NexiaZone:
 
     def update(self):
         dev = indigo.devices[self.device_id]
-        self.logger.debug(u"{}: Update".format(dev.name))
+        self.logger.threaddebug(u"{}: Update".format(dev.name))
         
         # has the Nexia account been initialized yet?
         account_dev = indigo.devices[self.account_id]
