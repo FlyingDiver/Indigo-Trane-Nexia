@@ -223,7 +223,11 @@ class NexiaThermostat:
         # except requests.RequestException as e:
         #     print("Error getting url", str(e))
         #     return None
-        request = self.session.get(request_url, allow_redirects=False)
+        try:
+        	request = self.session.get(request_url, allow_redirects=False)
+        except requests.RequestException as e:
+	        self._check_response("Error getting url: {}".format(str(e)), request)
+    		return None    
 
         if request.status_code == 302:
             # assuming its redirecting to login

@@ -17,12 +17,6 @@ HVAC_MODE_MAP = {
     'OFF'         : indigo.kHvacMode.Off
     }
 
-FAN_MODE_MAP = {
-    'auto': indigo.kFanMode.Auto,
-    'on'  : indigo.kFanMode.AlwaysOn,
-    'circulate'  : indigo.kFanMode.Auto
-    }
-
 
 class NexiaThermostat:
 

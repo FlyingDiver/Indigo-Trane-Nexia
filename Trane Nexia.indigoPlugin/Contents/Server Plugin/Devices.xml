@@ -26,7 +26,7 @@
             </State>
         </States>
         <UiDisplayStateId>authenticated</UiDisplayStateId>
-   </Device>
+    </Device>
     <Device type="thermostat" id="NexiaThermostat">
         <Name>Nexia Thermostat</Name>
         <ConfigUI>
