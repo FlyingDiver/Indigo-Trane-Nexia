@@ -48,7 +48,9 @@ class Plugin(indigo.PluginBase):
             self.logger.error(u"Unsupported macOS version! {}".format(macOS))
                 
         self.updateFrequency = float(self.pluginPrefs.get('updateFrequency', "15")) *  60.0
-        self.logger.debug(u"updateFrequency = " + str(self.updateFrequency))
+        self.logger.debug(u"updateFrequency = {}".format(self.updateFrequency))
+        self.next_update = time.time() + self.updateFrequency
+        self.update_needed = False
         
         self.nexia_accounts = {}
         self.nexia_thermostats = {}
@@ -80,7 +82,8 @@ class Plugin(indigo.PluginBase):
             self.logger.debug(u"logLevel = " + str(self.logLevel))
 
             self.updateFrequency = float(valuesDict['updateFrequency']) * 60.0
-            self.logger.debug(u"updateFrequency = " + str(self.updateFrequency))
+            self.logger.debug(u"updateFrequency = {}".format(self.updateFrequency))
+            self.next_update = time.time()
 
 
     ########################################
@@ -90,13 +93,18 @@ class Plugin(indigo.PluginBase):
         try:
             while True:
                                     
-                for thermostat in self.nexia_thermostats.values():
-                    thermostat.update()
+                if (time.time() > self.next_update) or self.update_needed:
+                
+                    self.update_needed = False
+                    self.next_update = time.time() + self.updateFrequency
+                
+                    for thermostat in self.nexia_thermostats.values():
+                        thermostat.update()
             
-                for zone in self.nexia_zones.values():
-                    zone.update()
+                    for zone in self.nexia_zones.values():
+                        zone.update()
                     
-                self.sleep(60.0)
+                self.sleep(2.0)
 
         except self.StopThread:
             self.logger.debug(u"runConcurrentThread ending")
@@ -269,10 +277,10 @@ class Plugin(indigo.PluginBase):
       
         if dev.deviceTypeId == 'NexiaAccount':
             account = NexiaAccount(int(dev.pluginProps['house_id']), 
-                        username=dev.pluginProps['username'], 
-                        password=dev.pluginProps['password'], 
-                        auto_login=True, 
-                        update_rate=self.updateFrequency)
+                                username=dev.pluginProps['username'], 
+                                password=dev.pluginProps['password'], 
+                                auto_login=True, 
+                                update_rate="Disable")
             if not account:
                 self.logger.warning("{}: deviceStartComm error creating device".format(dev.name))
                 dev.updateStateOnServer(key="authenticated", value=False)
@@ -289,6 +297,7 @@ class Plugin(indigo.PluginBase):
                 return
 
             self.nexia_thermostats[dev.id] = thermostat
+            self.update_needed = True
             
         elif dev.deviceTypeId == 'NexiaZone':
 
@@ -298,6 +307,7 @@ class Plugin(indigo.PluginBase):
                 return
 
             self.nexia_zones[dev.id] = zone
+            self.update_needed = True
             
 
     def deviceStopComm(self, dev):
@@ -426,9 +436,9 @@ class Plugin(indigo.PluginBase):
         for accountID, account in self.nexia_accounts.items():
             if indigo.devices[accountID].states['authenticated']:
                 data = account._get_thermostat_json()
-                self.logger.debug("{}: Data Dump\n{}".format(indigo.devices[accountID].name, json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))))
+                self.logger.info("{}: Data Dump\n{}".format(indigo.devices[accountID].name, json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))))
             else:
-                self.logger.debug("{}: Data Dump aborted, account not authenticated.".format(indigo.devices[accountID].name))
+                self.logger.info("{}: Data Dump aborted, account not authenticated.".format(indigo.devices[accountID].name))
             
         return True
         
