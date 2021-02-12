@@ -398,7 +398,10 @@ class Plugin(indigo.PluginBase):
     ########################################
     
     def handleChangeSetpointAction(self, dev, newSetpoint, stateKey):
-
+        if dev.deviceTypeId != "NexiaZone":
+            self.logger.warning(u'{}: Invalid {} command.  Only Zone devices have setpoints.'.format(dev.name, stateKey))
+            return
+            
         if stateKey == u"setpointCool":
             self.logger.info(u'{}: set cool to: {} and leave heat at: {}'.format(dev.name, newSetpoint, dev.heatSetpoint))
             self.nexia_zones[dev.id].set_zone_heat_cool_temp(dev.heatSetpoint, newSetpoint)
