@@ -151,14 +151,7 @@ class Plugin(indigo.PluginBase):
                 device_list.append((thermostat_id, name))
             elif filter == "All":
                 device_list.append((thermostat_id, name))
-    
-        if targetId:
-            try:
-                dev = indigo.devices[targetId]
-                device_list.insert(0, (dev.pluginProps["nexia_thermostat"], dev.name))
-            except:
-                pass
-                                                
+                                                    
         self.logger.debug("get_thermostat_list: device_list for {} ({}) = {}".format(typeId, filter, device_list))
         return device_list     
         
