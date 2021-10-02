@@ -9,7 +9,7 @@
 	<key>IwsApiVersion</key>
 	<string>1.0.0</string>
 	<key>CFBundleDisplayName</key>
-	<string>Trane Nexia</string>
+	<string>Trane Home</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.flyingdiver.indigoplugin.trane-nexia</string>
 	<key>CFBundleVersion</key>

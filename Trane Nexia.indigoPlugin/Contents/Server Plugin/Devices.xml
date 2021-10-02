@@ -2,7 +2,7 @@
 <Devices>
     <SupportURL>https://forums.indigodomo.com/viewforum.php?f=318</SupportURL>
      <Device type="custom" id="NexiaAccount">
-        <Name>Nexia User Account</Name>
+        <Name>Trane Home User Account</Name>
         <ConfigUI>
             <Field id="username" type="textfield">
                 <Label>Username:</Label>
@@ -14,8 +14,8 @@
                 <Label>House ID:</Label>
             </Field>
             <Field id="house_idNote" type="label" fontSize="small" fontColor="darkgray">
-                <Label>Your house_id. You can get this from logging in and looking at the url once you're looking at your climate device. 
-                https://www.mynexia.com/houses/&lt;house_id&gt;/climate</Label>
+                <Label>Your house_id. You can get this from logging into the Trane Home website and looking at the url for your climate device. 
+                https://www.tranehome.com/houses/&lt;house_id&gt;/climate</Label>
             </Field>
         </ConfigUI>
         <States>
@@ -28,7 +28,7 @@
         <UiDisplayStateId>authenticated</UiDisplayStateId>
     </Device>
     <Device type="thermostat" id="NexiaThermostat">
-        <Name>Nexia Thermostat</Name>
+        <Name>Trane Thermostat</Name>
         <ConfigUI>
             <Field id="NumTemperatureInputs"         type="textfield" defaultValue="0"     hidden="true"/>
             <Field id="NumHumidityInputs"            type="textfield" defaultValue="1"     hidden="true"/>
@@ -40,7 +40,7 @@
             <Field id="SupportsStatusRequest"        type="checkbox"  defaultValue="false" hidden="true"/>
 
             <Field id="nexia_account" type="menu">
-                <Label>Nexia Account:</Label>
+                <Label>Trane Home Account:</Label>
                 <List class="self" method="get_account_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
@@ -149,7 +149,7 @@
         </States>
    </Device>
     <Device type="thermostat" id="NexiaZone">
-        <Name>Nexia Zone</Name>
+        <Name>Trane Zone</Name>
         <ConfigUI>
             <Field id="NumTemperatureInputs"         type="textfield" defaultValue="1"     hidden="true"/>
             <Field id="NumHumidityInputs"            type="textfield" defaultValue="0"     hidden="true"/>
@@ -161,12 +161,12 @@
             <Field id="SupportsStatusRequest"        type="checkbox"  defaultValue="false" hidden="true"/>
 
             <Field id="nexia_account" type="menu">
-                <Label>Nexia Account:</Label>
+                <Label>Trane Home Account:</Label>
                 <List class="self" method="get_account_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
             <Field id="nexia_thermostat" type="menu">
-                <Label>Nexia Thermostat:</Label>
+                <Label>Thermostat:</Label>
                 <List class="self"  filter="Active" method="get_thermostat_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>

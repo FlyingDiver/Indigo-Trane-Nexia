@@ -24,6 +24,10 @@ kFanModeEnumToStrMap = {
     indigo.kFanMode.AlwaysOn        : u"on"
 }
 
+minMacOS = "10.13"
+def versiontuple(v):
+    return tuple(map(int, (v.split("."))))
+    
 class Plugin(indigo.PluginBase):
 
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
@@ -40,13 +44,14 @@ class Plugin(indigo.PluginBase):
 
 
     def startup(self):
-        self.logger.info(u"Starting Trane Nexia")
+        self.logger.info(u"Starting Trane Home")
        
         macOS = platform.mac_ver()[0]
         self.logger.debug(u"macOS {}, Indigo {}".format(macOS, indigo.server.version))
-        if int(macOS[3:5]) < 13:
+        if versiontuple(macOS) < versiontuple(minMacOS):
             self.logger.error(u"Unsupported macOS version! {}".format(macOS))
-                
+   
+                   
         self.updateFrequency = float(self.pluginPrefs.get('updateFrequency', "15")) *  60.0
         self.logger.debug(u"updateFrequency = {}".format(self.updateFrequency))
         self.next_update = time.time() + self.updateFrequency
@@ -57,7 +62,7 @@ class Plugin(indigo.PluginBase):
         self.nexia_zones = {}
         
     def shutdown(self):
-        self.logger.info(u"Stopping Trane Nexia")
+        self.logger.info(u"Stopping Trane Home")
         
 
     def validatePrefsConfigUi(self, valuesDict):
@@ -231,8 +236,8 @@ class Plugin(indigo.PluginBase):
 
         elif typeId == "NexiaThermostat":
             if valuesDict["nexia_account"] == 0:
-                errorsDict["nexia_account"] = "No Nexia Account Specified"
-                self.logger.warning("validateDeviceConfigUi - No Nexia Account Specified")
+                errorsDict["nexia_account"] = "No Trane Home Account Specified"
+                self.logger.warning("validateDeviceConfigUi - No Trane Home Account Specified")
                 valid = False
             
             if len(valuesDict["nexia_thermostat"]) == 0:
@@ -244,8 +249,8 @@ class Plugin(indigo.PluginBase):
 
         elif typeId == "NexiaZone":            
             if valuesDict["nexia_account"] == 0:
-                errorsDict["nexia_account"] = "No Nexia Account Specified"
-                self.logger.warning("validateDeviceConfigUi - No Nexia Account Specified")
+                errorsDict["nexia_account"] = "No Trane Home Account Specified"
+                self.logger.warning("validateDeviceConfigUi - No Trane Home Account Specified")
                 valid = False
             
             if len(valuesDict["nexia_thermostat"]) == 0:
