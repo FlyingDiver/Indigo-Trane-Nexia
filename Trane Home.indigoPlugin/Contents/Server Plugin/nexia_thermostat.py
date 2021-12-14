@@ -26,9 +26,9 @@ GLOBAL_LOGIN_ATTEMPTS_LEFT = GLOBAL_LOGIN_ATTEMPTS
 
 class NexiaThermostat:
     """ Nexia Climate Device Access Class """
-    ROOT_URL = "https://www.mynexia.com"
-    AUTH_FAILED_STRING = "https://www.mynexia.com/login"
-    AUTH_FORGOTTEN_PASSWORD_STRING = "https://www.mynexia.com/account/forgotten_credentials"
+    ROOT_URL = "https://www.tranehome.com"
+    AUTH_FAILED_STRING = "https://www.tranehome.com/login"
+    AUTH_FORGOTTEN_PASSWORD_STRING = "https://www.tranehome.com/account/forgotten_credentials"
     DEFAULT_UPDATE_RATE = 120  # 2 minutes
     DISABLE_AUTO_UPDATE = "Disable"
     PUT_UPDATE_DELAY = 0.5
