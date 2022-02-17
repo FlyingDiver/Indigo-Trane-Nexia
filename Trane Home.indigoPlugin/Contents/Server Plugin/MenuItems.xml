@@ -18,7 +18,7 @@
         <Name>Resume Schedule for Zone</Name>
         <CallbackMethod>menuResumeSchedule</CallbackMethod>
         <ConfigUI>
-            <Field id="targetDevice" type="menu">
+            <Field id="targetDevice" type="men">
                 <Label>Select Zone:</Label>
                 <List class="self" filter="" method="pickZone" dynamicReload="true"/>
             </Field>

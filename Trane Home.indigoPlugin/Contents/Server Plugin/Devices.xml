@@ -39,12 +39,12 @@
             <Field id="ShowCoolHeatEquipmentStateUI" type="checkbox"  defaultValue="true"  hidden="true"/>
             <Field id="SupportsStatusRequest"        type="checkbox"  defaultValue="false" hidden="true"/>
 
-            <Field id="nexia_account" type="menu">
+            <Field id="nexia_account" type="men">
                 <Label>Trane Home Account:</Label>
                 <List class="self" method="get_account_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
-            <Field id="nexia_thermostat" type="menu">
+            <Field id="nexia_thermostat" type="men">
                 <Label>Thermostat:</Label>
                 <List class="self" filter="Available" method="get_thermostat_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
@@ -160,17 +160,17 @@
             <Field id="ShowCoolHeatEquipmentStateUI" type="checkbox"  defaultValue="true"  hidden="true"/>
             <Field id="SupportsStatusRequest"        type="checkbox"  defaultValue="false" hidden="true"/>
 
-            <Field id="nexia_account" type="menu">
+            <Field id="nexia_account" type="men">
                 <Label>Trane Home Account:</Label>
                 <List class="self" method="get_account_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
-            <Field id="nexia_thermostat" type="menu">
+            <Field id="nexia_thermostat" type="men">
                 <Label>Thermostat:</Label>
                 <List class="self"  filter="Active" method="get_thermostat_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
-            <Field id="nexia_zone" type="menu">
+            <Field id="nexia_zone" type="men">
                 <Label>Zone:</Label>
                 <List class="self" filter="Available" method="get_zone_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
