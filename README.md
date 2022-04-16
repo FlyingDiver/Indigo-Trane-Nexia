@@ -4,6 +4,14 @@ The plugin enables monitoring and control of Nexia Home compatible thermostats.
 
 [![N|Solid](http://forums.indigodomo.com/static/www/images/wordmark.png)](http://indigodomo.com)
 
+| Requirement            |                     |   |
+|------------------------|---------------------|---|
+| Minimum Indigo Version | 2022.1              |   |
+| Python Library (API)   | Unofficial          |   |
+| Requires Local Network | No                  |   |
+| Requires Internet      | Yes                 |   |
+| Hardware Interface     | None                |   |
+
 Requirements:
 
 * The username/password for your Nexia Home account
