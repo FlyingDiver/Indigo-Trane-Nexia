@@ -14,7 +14,7 @@
         <Name>Set Air Cleaner Mode Program</Name>
         <CallbackMethod>setAirCleanerModeAction</CallbackMethod>
         <ConfigUI>
-            <Field id="cleaner_mode" type="men">
+            <Field id="cleaner_mode" type="menu">
                 <Label>Air Cleaner Mode:</Label>
                  <List class="self" filter="" method="airCleanerModeGenerator" dynamicReload="true"/>
             </Field>
@@ -53,7 +53,7 @@
         <Name>Select Zone Preset</Name>
         <CallbackMethod>zoneSetPresetAction</CallbackMethod>
         <ConfigUI>
-            <Field id="zone_preset" type="men">
+            <Field id="zone_preset" type="menu">
                 <Label>Select Zone Preset:</Label>
                  <List class="self" filter="" method="zonePresetGenerator" dynamicReload="true"/>
             </Field>
