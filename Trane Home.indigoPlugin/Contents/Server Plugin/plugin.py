@@ -1,13 +1,16 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import asyncio
+import threading
 import time
 import logging
 import json
-import platform
 
-from nexia_thermostat import NexiaThermostat as NexiaAccount
-from nexia_devices import NexiaThermostat, NexiaZone
+try:
+    import aiohttp
+    from nexia.home import NexiaHome
+except ImportError:
+    raise ImportError("'Required Python libraries missing.  Run 'pip3 install aiohttp nexia' in Terminal window, then reload plugin.")
 
 kHvacModeEnumToStrMap = {
     indigo.kHvacMode.Cool: "cool",
@@ -24,13 +27,6 @@ kFanModeEnumToStrMap = {
     indigo.kFanMode.AlwaysOn: "on"
 }
 
-minMacOS = "10.13"
-
-
-def versiontuple(v):
-    return tuple(map(int, (v.split("."))))
-
-
 class Plugin(indigo.PluginBase):
 
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
@@ -41,11 +37,6 @@ class Plugin(indigo.PluginBase):
         self.indigo_log_handler.setLevel(self.logLevel)
         self.logger.debug(f"logLevel = {self.logLevel}")
 
-        macOS = platform.mac_ver()[0]
-        self.logger.debug(f"macOS {macOS}, Indigo {indigo.server.version}")
-        if versiontuple(macOS) < versiontuple(minMacOS):
-            self.logger.error(f"Unsupported macOS version! {macOS}")
-
         self.updateFrequency = float(self.pluginPrefs.get('updateFrequency', "15")) * 60.0
         self.logger.debug(f"updateFrequency = {self.updateFrequency}")
         self.next_update = time.time() + self.updateFrequency
@@ -54,6 +45,11 @@ class Plugin(indigo.PluginBase):
         self.nexia_accounts = {}
         self.nexia_thermostats = {}
         self.nexia_zones = {}
+
+        self.event_loop = None
+        self.async_thread = None
+
+    ##############################################################################################
 
     def validatePrefsConfigUi(self, valuesDict):    # noqa
         errorDict = indigo.Dict()
@@ -78,115 +74,88 @@ class Plugin(indigo.PluginBase):
             self.logger.debug(f"updateFrequency = {self.updateFrequency}")
             self.next_update = time.time()
 
-    ########################################
+    def startup(self):
+        self.logger.debug("startup")
+        threading.Thread(target=self.run_async_thread).start()
+        self.logger.debug("startup complete")
 
-    def runConcurrentThread(self):
+    def run_async_thread(self):
+        self.logger.debug("run_async_thread starting")
+        self.event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.event_loop)
+        self.event_loop.run_until_complete(self.async_main())
+        self.event_loop.close()
+        self.logger.debug("run_async_thread exiting")
+
+    async def async_main(self):
+        self.logger.debug("async_main starting")
+        self.event_loop.create_task(self.update_task())
+
+        while True:
+            await asyncio.sleep(0.1)
+            if self.stopThread:
+                self.logger.debug("async_main: stopping")
+                break
+        self.logger.debug("async_main: exiting")
+
+    async def fetch_nexia(self, username, password, brand):
+        session = aiohttp.ClientSession()
+        try:
+            nexia_home = NexiaHome(session, username=username, password=password, brand=brand)
+            await nexia_home.login()
+            await nexia_home.update()
+        except Exception as e:
+            self.logger.warning(f"fetch_nexia: exception:{e}")
+            raise e
+        finally:
+            await session.close()
+        return nexia_home
+
+    async def update_task(self):
         try:
             while True:
                 if (time.time() > self.next_update) or self.update_needed:
+                    self.logger.debug(f"update_task: update_needed = {self.update_needed}")
+                    self.logger.debug(f"update_task: running")
 
                     self.update_needed = False
                     self.next_update = time.time() + self.updateFrequency
 
                     for thermostat in self.nexia_thermostats.values():
-                        thermostat.update()
+                        self.logger.debug(f"update_task: updating thermostat {thermostat.name}")
+
+                        update_list = [
+                            {'key': "thermostat_name", 'value': thermostat.get_name()},
+                            {'key': "thermostat_model", 'value': thermostat.get_model()},
+                            {'key': "thermostat_firmware", 'value': thermostat.get_type()},
+                            {'key': "thermostat_type", 'value': thermostat.get_type()},
+                            {'key': "fan_mode", 'value': data['device_name']},
+                            {'key': "fan_speed", 'value': data['fan_speed']},
+                            {'key': "outdoor_temperature", 'value': data['model']},
+                            {'key': "dehumidify_setpoint", 'value': data['name']},
+                            {'key': "system_status", 'value': data['occupancy_sensors']},
+                            {'key': "compressor_speed", 'value': thermostat.get_current_compressor_speed()},
+                            {'key': "requested_compressor_speed", 'value': data['tilt']},
+                            {'key': "air_cleaner_mode", 'value': data['type']},
+                            {'key': "has_outdoor_temperature", 'value': data['zone']},
+                            {'key': "has_relative_humidity", 'value': data['zone']},
+                            {'key': "has_variable_speed_compressor", 'value': data['zone']},
+                            {'key': "has_emergency_heat", 'value': data['zone']},
+                            {'key': "has_variable_fan_speed", 'value': data['zone']},
+                            {'key': "is_blower_active", 'value': data['zone']},
+                            {'key': "is_emergency_heat_active", 'value': data['zone']},
+                        ]
+                        try:
+                            device.updateStatesOnServer(update_list)
+                        except Exception as e:
+                            self.logger.error(f"{device.name}: failed to update states: {e}")
 
                     for zone in self.nexia_zones.values():
-                        zone.update()
+                        self.logger.debug(f"update_task: updating zone {zone.name}")
 
-                self.sleep(2.0)
+                await asyncio.sleep(2.0)
         except self.StopThread:
             pass
-
-    ########################################
-    #
-    # device UI methods
-    #
-    ########################################
-
-    def get_account_list(self, filter="", valuesDict=None, typeId="", targetId=0):
-        self.logger.threaddebug(f"get_account_list: typeId = {typeId}, targetId = {targetId}, valuesDict = {valuesDict}")
-        accounts = [
-            (accountID, indigo.devices[int(accountID)].name)
-            for accountID in self.nexia_accounts
-        ]
-        self.logger.threaddebug(f"get_account_list: accounts = {accounts}")
-        return accounts
-
-    def get_thermostat_list(self, filter="", valuesDict=None, typeId="", targetId=0):
-        self.logger.debug(f"get_thermostat_list: typeId = {typeId}, targetId = {targetId}, filter = {filter}, valuesDict = {valuesDict}")
-
-        try:
-            account = self.nexia_accounts[int(valuesDict["nexia_account"])]
-        except (Exception,):
-            self.logger.debug("get_thermostat_list: no active accounts, returning empty list")
-            return []
-
-        active_stats = [
-            (int(indigo.devices[dev].pluginProps["nexia_thermostat"]))
-            for dev in self.nexia_thermostats
-        ]
-        self.logger.debug(f"get_thermostat_list: active_stats = {active_stats}")
-
-        device_list = []
-        for thermostat_id in account.get_thermostat_ids():
-            name = account.get_thermostat_name(thermostat_id)
-            if filter == "Available" and thermostat_id not in active_stats:
-                device_list.append((thermostat_id, name))
-            elif filter == "Active" and thermostat_id in active_stats:
-                device_list.append((thermostat_id, name))
-            elif filter == "All":
-                device_list.append((thermostat_id, name))
-
-        self.logger.debug(f"get_thermostat_list: device_list for {typeId} ({filter}) = {device_list}")
-        return device_list
-
-    def get_zone_list(self, filter="", valuesDict=None, typeId="", targetId=0):
-        self.logger.debug(f"get_zone_list: typeId = {typeId}, targetId = {targetId}, filter = {filter}, valuesDict = {valuesDict}")
-
-        try:
-            account = self.nexia_accounts[int(valuesDict["nexia_account"])]
-        except (Exception,):
-            self.logger.debug("get_zone_list: no active accounts, returning empty list")
-            return []
-
-        try:
-            thermostat_id = int(valuesDict["nexia_thermostat"])
-        except (Exception,):
-            self.logger.debug("get_zone_list: no thermostat selected, returning empty list")
-            return []
-
-        active_zones = [
-            (int(indigo.devices[dev].pluginProps["nexia_zone"]))
-            for dev in self.nexia_zones
-        ]
-        self.logger.debug(f"get_zone_list: active_zones = {active_zones}")
-
-        device_list = []
-        for zone_id in account.get_zone_ids(thermostat_id):
-            name = account.get_zone_name(thermostat_id, zone_id)
-            if filter == "Available" and zone_id not in active_zones:
-                device_list.append((zone_id, name))
-            elif filter == "Active" and zone_id in active_zones:
-                device_list.append((zone_id, name))
-            elif filter == "All":
-                device_list.append((zone_id, name))
-
-        if targetId:
-            try:
-                dev = indigo.devices[targetId]
-                device_list.insert(0, (dev.pluginProps["nexia_zone"], dev.name))
-            except (Exception,):
-                pass
-
-        self.logger.debug(f"get_zone_list: device_list for {typeId} ({filter}) = {device_list}")
-        return device_list
-
-        # doesn't do anything, just needed to force other menus to dynamically refresh
-
-    def menuChanged(self, valuesDict=None, typeId=None, devId=None):    # noqa
-        return valuesDict
-
     ########################################
 
     def validateDeviceConfigUi(self, valuesDict, typeId, devId):
@@ -204,13 +173,6 @@ class Plugin(indigo.PluginBase):
                 errorsDict["password"] = "No password provided"
                 self.logger.warning("validateDeviceConfigUi - No password provided")
                 valid = False
-
-            if len(valuesDict["house_id"]) == 0:
-                errorsDict["house_id"] = "No house_id provided"
-                self.logger.warning("validateDeviceConfigUi - No house_id provided")
-                valid = False
-
-            valuesDict["address"] = valuesDict["house_id"]
 
         elif typeId == "NexiaThermostat":
             if valuesDict["nexia_account"] == 0:
@@ -252,39 +214,44 @@ class Plugin(indigo.PluginBase):
         self.logger.info(f"{dev.name}: Starting {dev.deviceTypeId} Device {dev.id}")
 
         if dev.deviceTypeId == 'NexiaAccount':
-            account = NexiaAccount(int(dev.pluginProps['house_id']),
-                                   username=dev.pluginProps['username'],
-                                   password=dev.pluginProps['password'],
-                                   auto_login=True,
-                                   update_rate="Disable")
-            if not account:
+            nexia_home = asyncio.run(self.fetch_nexia(dev.pluginProps['username'], dev.pluginProps['password'], dev.pluginProps.get('brand', 'nexia')))
+            if not nexia_home:
                 self.logger.warning(f"{dev.name}: deviceStartComm error creating device")
                 dev.updateStateOnServer(key="authenticated", value=False)
                 return
 
-            self.nexia_accounts[dev.id] = account
+            for thermostat_id in nexia_home.get_thermostat_ids():
+                thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
+                self.logger.debug(f"{thermostat.get_name()}: {thermostat._thermostat_json}")
+                for zone_id in thermostat.get_zone_ids():
+                    zone = thermostat.get_zone_by_id(zone_id)
+                    self.logger.debug(f"{zone.get_name()}: {zone._zone_json}")
+
+            self.nexia_accounts[dev.id] = nexia_home
             dev.updateStateOnServer(key="authenticated", value=True)
 
         elif dev.deviceTypeId == 'NexiaThermostat':
 
-            thermostat = NexiaThermostat(dev.id, int(dev.pluginProps['nexia_account']), int(dev.pluginProps['nexia_thermostat']))
-            if not thermostat:
-                self.logger.warning(f"{dev.name}: deviceStartComm error creating device")
-                return
-
-            self.nexia_thermostats[dev.id] = thermostat
-            self.update_needed = True
+            try:
+                account = self.nexia_accounts[int(dev.pluginProps['nexia_account'])]
+                thermostat = account.get_thermostat_by_id(int(dev.pluginProps['nexia_thermostat']))
+            except KeyError:
+                self.logger.warning(f"{dev.name}: deviceStartComm error getting thermostat {dev.pluginProps['nexia_thermostat']}")
+            else:
+                self.nexia_thermostats[dev.id] = thermostat
+                self.update_needed = True
 
         elif dev.deviceTypeId == 'NexiaZone':
 
-            zone = NexiaZone(dev.id, int(dev.pluginProps['nexia_account']), int(dev.pluginProps['nexia_thermostat']),
-                             int(dev.pluginProps['nexia_zone']))
-            if not zone:
-                self.logger.warning(f"{dev.name}: deviceStartComm error creating device")
-                return
-
-            self.nexia_zones[dev.id] = zone
-            self.update_needed = True
+            try:
+                account = self.nexia_accounts[int(dev.pluginProps['nexia_account'])]
+                thermostat = account.get_thermostat_by_id(int(dev.pluginProps['nexia_thermostat']))
+                zone = thermostat.get_zone_by_id(int(dev.pluginProps['nexia_zone']))
+            except KeyError:
+                self.logger.warning(f"{dev.name}: deviceStartComm error getting zone {dev.pluginProps['nexia_zone']}")
+            else:
+                self.nexia_zones[dev.id] = zone
+                self.update_needed = True
 
     def deviceStopComm(self, dev):
 
@@ -301,6 +268,105 @@ class Plugin(indigo.PluginBase):
         elif dev.deviceTypeId == 'NexiaZone':
             if dev.id in self.nexia_zones:
                 del self.nexia_zones[dev.id]
+
+    ########################################
+    #
+    # device UI methods
+    #
+    ########################################
+
+    def get_account_list(self, filter="", valuesDict=None, typeId="", targetId=0):
+        self.logger.threaddebug(f"get_account_list: typeId = {typeId}, targetId = {targetId}, valuesDict = {valuesDict}")
+        accounts = [
+            (accountID, indigo.devices[int(accountID)].name)
+            for accountID in self.nexia_accounts
+        ]
+        self.logger.threaddebug(f"get_account_list: accounts = {accounts}")
+        return accounts
+
+    def get_thermostat_list(self, filter="", valuesDict=None, typeId="", targetId=0):
+        self.logger.debug(f"get_thermostat_list: typeId = {typeId}, targetId = {targetId}, filter = {filter}, valuesDict = {valuesDict}")
+
+        try:
+            nexia_home = self.nexia_accounts[int(valuesDict["nexia_account"])]
+        except Exception as e:
+            self.logger.debug("get_thermostat_list: no active accounts, returning empty list")
+            return []
+
+        active_stats = [
+            (int(indigo.devices[dev].pluginProps["nexia_thermostat"]))
+            for dev in self.nexia_thermostats
+        ]
+        self.logger.debug(f"get_thermostat_list: active_stats = {active_stats}")
+
+        device_list = []
+        for thermostat_id in nexia_home.get_thermostat_ids():
+            name = nexia_home.get_thermostat_by_id(thermostat_id).get_name()
+            if filter == "Available" and thermostat_id not in active_stats:
+                device_list.append((thermostat_id, name))
+            elif filter == "Active" and thermostat_id in active_stats:
+                device_list.append((thermostat_id, name))
+            elif filter == "All":
+                device_list.append((thermostat_id, name))
+
+        if targetId:
+            try:
+                dev = indigo.devices[targetId]
+                device_list.insert(0, (dev.pluginProps["nexia_thermostat"], dev.name))
+            except (Exception,):
+                pass
+
+        self.logger.debug(f"get_thermostat_list: device_list for {typeId} ({filter}) = {device_list}")
+        return device_list
+
+    def get_zone_list(self, filter="", valuesDict=None, typeId="", targetId=0):
+        self.logger.debug(f"get_zone_list: typeId = {typeId}, targetId = {targetId}, filter = {filter}, valuesDict = {valuesDict}")
+
+        try:
+            nexia_home = self.nexia_accounts[int(valuesDict["nexia_account"])]
+        except (Exception,):
+            self.logger.debug("get_zone_list: no active accounts, returning empty list")
+            return []
+
+        try:
+            thermostat_id = int(valuesDict["nexia_thermostat"])
+        except (Exception,):
+            self.logger.debug("get_zone_list: no thermostat selected, returning empty list")
+            return []
+
+        active_zones = [
+            (int(indigo.devices[dev].pluginProps["nexia_zone"]))
+            for dev in self.nexia_zones
+        ]
+        self.logger.debug(f"get_zone_list: active_zones = {active_zones}")
+
+        device_list = []
+        thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
+        for zone_id in thermostat.get_zone_ids():
+            name = thermostat.get_zone_by_id(zone_id).get_name()
+            if filter == "Available" and zone_id not in active_zones:
+                device_list.append((zone_id, name))
+            elif filter == "Active" and zone_id in active_zones:
+                device_list.append((zone_id, name))
+            elif filter == "All":
+                device_list.append((zone_id, name))
+
+        if targetId:
+            try:
+                dev = indigo.devices[targetId]
+                device_list.insert(0, (dev.pluginProps["nexia_zone"], dev.name))
+            except (Exception,):
+                pass
+
+        self.logger.debug(f"get_zone_list: device_list for {typeId} ({filter}) = {device_list}")
+        return device_list
+
+        # doesn't do anything, just needed to force other menus to dynamically refresh
+
+    def menuChanged(self, valuesDict=None, typeId=None, devId=None):    # noqa
+        return valuesDict
+
+    ########################################
 
     ########################################
     # Thermostat Action callbacks
@@ -397,18 +463,6 @@ class Plugin(indigo.PluginBase):
             return False
 
         self.nexia_zones[deviceId].call_return_to_schedule()
-        return True
-
-    def menuDumpThermostat(self):
-        self.logger.debug("menuDumpThermostat")
-        for accountID, account in self.nexia_accounts.items():
-            if indigo.devices[accountID].states['authenticated']:
-                data = account._get_thermostat_json()
-                self.logger.info(
-                    f"{indigo.devices[accountID].name}: Data Dump\n{json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))}")
-            else:
-                self.logger.info(f"{indigo.devices[accountID].name}: Data Dump aborted, account not authenticated.")
-
         return True
 
     ########################################

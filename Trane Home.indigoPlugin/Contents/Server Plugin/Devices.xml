@@ -10,13 +10,14 @@
             <Field id="password" type="textfield" secure="true">
                 <Label>Password:</Label>
             </Field>
-            <Field id="house_id" type="textfield">
-                <Label>House ID:</Label>
-            </Field>
-            <Field id="house_idNote" type="label" fontSize="small" fontColor="darkgray">
-                <Label>Your house_id. You can get this from logging into the Trane Home website and looking at the url for your climate device. 
-                https://www.tranehome.com/houses/&lt;house_id&gt;/climate</Label>
-            </Field>
+        	<Field id="brand" type="menu" defaultValue="nexia">
+        		<Label>Brand:</Label>
+        		<List>
+        			<Option value="asair">Asair</Option>
+        			<Option value="nexia">Nexia</Option>
+        			<Option value="trane">Trane</Option>
+        		</List>
+        	</Field>
         </ConfigUI>
         <States>
             <State id="authenticated">
