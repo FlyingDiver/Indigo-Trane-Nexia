@@ -47,7 +47,7 @@
             </Field>
             <Field id="nexia_thermostat" type="menu">
                 <Label>Thermostat:</Label>
-                <List class="self" filter="Available" method="get_thermostat_list" dynamicReload="true"/>
+                <List class="self" filter="Active" method="get_thermostat_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
         </ConfigUI>
@@ -173,7 +173,7 @@
             </Field>
             <Field id="nexia_zone" type="menu">
                 <Label>Zone:</Label>
-                <List class="self" filter="Available" method="get_zone_list" dynamicReload="true"/>
+                <List class="self" filter="Active" method="get_zone_list" dynamicReload="true"/>
                 <CallbackMethod>menuChanged</CallbackMethod>
             </Field>
         </ConfigUI>
@@ -208,15 +208,15 @@
                 <TriggerLabel>requested_mode</TriggerLabel>
                 <ControlPageLabel>requested_mode</ControlPageLabel>
             </State>
-            <State id="is_zone_calling">
+            <State id="is_calling">
                 <ValueType>Boolean</ValueType>
-                <TriggerLabel>is_zone_calling</TriggerLabel>
-                <ControlPageLabel>is_zone_calling</ControlPageLabel>
+                <TriggerLabel>is_calling</TriggerLabel>
+                <ControlPageLabel>is_calling</ControlPageLabel>
             </State>
-            <State id="is_zone_in_permanent_hold">
+            <State id="is_in_permanent_hold">
                 <ValueType>Boolean</ValueType>
-                <TriggerLabel>is_zone_in_permanent_hold</TriggerLabel>
-                <ControlPageLabel>is_zone_in_permanent_hold</ControlPageLabel>
+                <TriggerLabel>is_in_permanent_hold</TriggerLabel>
+                <ControlPageLabel>is_in_permanent_hold</ControlPageLabel>
             </State>
         </States>
     </Device>
