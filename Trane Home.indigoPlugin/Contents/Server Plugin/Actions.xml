@@ -58,9 +58,5 @@
                  <List class="self" filter="" method="zonePresetGenerator" dynamicReload="true"/>
             </Field>
         </ConfigUI>
-    </Action>    
-    <Action id="resumeProgram" deviceFilter="self.NexiaZone">
-        <Name>Resume Program</Name>
-        <CallbackMethod>actionResumeProgram</CallbackMethod>
     </Action>
 </Actions>
