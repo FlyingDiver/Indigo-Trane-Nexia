@@ -1,7 +1,21 @@
 <?xml version="1.0"?>
 <PluginConfig>
     <SupportURL>https://forums.indigodomo.com/viewforum.php?f=318</SupportURL>
-    
+    <Field id="username" type="textfield">
+        <Label>Username:</Label>
+    </Field>
+    <Field id="password" type="textfield" secure="true">
+        <Label>Password:</Label>
+    </Field>
+    <Field id="brand" type="menu" defaultValue="nexia">
+        <Label>Brand:</Label>
+        <List>
+            <Option value="asair">Asair</Option>
+            <Option value="nexia">Nexia</Option>
+            <Option value="trane">Trane</Option>
+        </List>
+    </Field>
+    <Field id="separator1" type="separator"/>
     <Field id="updateFrequency" type="textfield" defaultValue="15">
         <Label>Update frequency (minutes):</Label>
     </Field>

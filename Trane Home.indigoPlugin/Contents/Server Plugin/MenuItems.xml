@@ -22,5 +22,9 @@
             </Field>
         </ConfigUI>
     </MenuItem>
+    <MenuItem id="menu3">
+        <Name>Write Nexia Data to Log</Name>
+        <CallbackMethod>menuDumpNexia</CallbackMethod>
+    </MenuItem>
 </MenuItems>
 
