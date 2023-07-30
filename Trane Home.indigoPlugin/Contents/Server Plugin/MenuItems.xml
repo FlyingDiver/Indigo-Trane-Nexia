@@ -5,7 +5,6 @@
 	 menu item. Note - nothing will be returned to the client, so if you need to communicate
 	 back to the user you can post information into the Event Log.
 -->
-
 <MenuItems>
     <SupportURL>https://forums.indigodomo.com/viewforum.php?f=318</SupportURL>
 
@@ -13,7 +12,6 @@
         <Name>Resume All Schedules</Name>
         <CallbackMethod>menuResumeAllSchedules</CallbackMethod>
     </MenuItem>
-
     <MenuItem id="menu2">
         <Name>Resume Schedule for Zone</Name>
         <CallbackMethod>menuResumeSchedule</CallbackMethod>
@@ -24,12 +22,9 @@
             </Field>
         </ConfigUI>
     </MenuItem>
-
-    <MenuItem id="sep1"/>
-
     <MenuItem id="menu3">
-        <Name>Write Thermostat Data to Log</Name>
-        <CallbackMethod>menuDumpThermostat</CallbackMethod>
+        <Name>Write Nexia Data to Log</Name>
+        <CallbackMethod>menuDumpNexia</CallbackMethod>
     </MenuItem>
 </MenuItems>
 
