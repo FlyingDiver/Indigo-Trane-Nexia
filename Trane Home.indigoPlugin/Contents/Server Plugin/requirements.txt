@@ -1,2 +1,2 @@
-aiohttp==3.9.2
+aiohttp==3.9.4
 nexia==2.0.7
