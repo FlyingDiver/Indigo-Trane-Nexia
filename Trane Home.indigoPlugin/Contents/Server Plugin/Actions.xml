@@ -29,6 +29,15 @@
             </Field>
         </ConfigUI>
     </Action>    
+    <Action id="set_fanspeed_setpoint" deviceFilter="self.NexiaThermostat">
+        <Name>Set Fan Speed Setpoint</Name>
+        <CallbackMethod>setFanSpeedSetpointAction</CallbackMethod>
+        <ConfigUI>
+            <Field id="fanspeed_setpoint" type="textfield">
+                <Label>Fan Speed Setpoint (%):</Label>
+            </Field>
+        </ConfigUI>
+    </Action>
     <Action id="setFollowSchedule" deviceFilter="self.NexiaThermostat">
         <Name>Enabled Scheduled Program Changes</Name>
         <CallbackMethod>setFollowScheduleAction</CallbackMethod>
@@ -37,8 +46,7 @@
                 <Label>Scheduled Programs Enabled:</Label>
             </Field>
         </ConfigUI>
-    </Action>    
-
+    </Action>
     <Action id="zoneReturnToSchedule" deviceFilter="self.NexiaZone">
         <Name>Zone Return to Scheduled Operation</Name>
         <CallbackMethod>zoneReturnToScheduleAction</CallbackMethod>

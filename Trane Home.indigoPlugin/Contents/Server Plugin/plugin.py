@@ -6,12 +6,9 @@ import time
 import logging
 import json
 
-try:
-    from aiohttp import ClientSession
-    from nexia.home import NexiaHome
-    from nexia.const import AIR_CLEANER_MODES
-except ImportError:
-    raise ImportError("'Required Python libraries missing.  Run 'pip3 install aiohttp nexia' in Terminal window, then reload plugin.")
+from aiohttp import ClientSession
+from nexia.home import NexiaHome
+from nexia.const import AIR_CLEANER_MODES
 
 kHvacModeEnumToStrMap = {
     indigo.kHvacMode.Cool: "COOL",
@@ -478,6 +475,15 @@ class Plugin(indigo.PluginBase):
             asyncio.run_coroutine_threadsafe(thermostat.set_dehumidify_setpoint(float(setpoint) / 100.0), self.event_loop)
         else:
             self.logger.warning(f"{thermostatDevice.name}: setDehumidifySetpointAction: System does not have dehumidify support.")
+
+    def setFanSpeedSetpointAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+        setpoint = pluginAction.props.get("fanspeed_setpoint", "50")
+        self.logger.debug(f"{thermostatDevice.name}: setFanSpeedSetpointAction: {setpoint}%")
+        thermostat = self.nexia_home.get_thermostat_by_id(int(thermostatDevice.pluginProps['nexia_thermostat']))
+        if thermostat.has_variable_fan_speed():
+            asyncio.run_coroutine_threadsafe(thermostat.set_fan_setpoint(float(setpoint) / 100.0), self.event_loop)
+        else:
+            self.logger.warning(f"{thermostatDevice.name}: setDehumidifySetpointAction: System does not have set fan speed support.")
 
     def setFollowScheduleAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
         enabled = pluginAction.props.get("schedules_enabled", False)
