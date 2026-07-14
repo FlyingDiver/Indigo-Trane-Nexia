@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import indigo
 import asyncio
 import threading
 import time
@@ -124,7 +125,7 @@ class Plugin(indigo.PluginBase):
         self.event_loop.close()
         self.logger.debug("run_async_thread exiting")
 
-    def asyncio_exception_handler(self, loop, context):
+    def asyncio_exception_handler(self, _loop, context):
         self.logger.exception(f"Event loop exception {context}")
 
     async def async_main(self):
@@ -162,7 +163,8 @@ class Plugin(indigo.PluginBase):
 
         for dev_id in self.nexia_thermostats:
             device = indigo.devices[dev_id]
-            thermostat_id = int(device.pluginProps['nexia_thermostat'])
+#            thermostat_id = int(device.pluginProps['nexia_thermostat'])
+            thermostat_id = device.pluginProps['nexia_thermostat']
             self.logger.debug(f"{device.name}: starting update for thermostat {thermostat_id}")
             thermostat = self.nexia_home.get_thermostat_by_id(thermostat_id)
             update_list = [
@@ -424,11 +426,11 @@ class Plugin(indigo.PluginBase):
 
     def menuResumeAllSchedules(self):
         self.logger.debug("menuResumeAllSchedules")
-        for devId, zone in self.nexia_zones.items():
-            zone.call_return_to_schedule()
+        for devId in self.nexia_zones:
+            self.resume_zone_schedule(indigo.devices[devId])
         return True
 
-    def menuResumeSchedule(self, valuesDict, typeId):
+    def menuResumeSchedule(self, valuesDict, _typeId):
         self.logger.debug("menuResumeSchedule")
         try:
             deviceId = int(valuesDict["targetDevice"])
@@ -436,8 +438,14 @@ class Plugin(indigo.PluginBase):
             self.logger.error("Bad Device specified for Resume Schedule operation")
             return False
 
-        self.nexia_zones[deviceId].call_return_to_schedule()
+        self.resume_zone_schedule(indigo.devices[deviceId])
         return True
+
+    def resume_zone_schedule(self, zone_device):
+        thermostat = self.nexia_home.get_thermostat_by_id(int(zone_device.pluginProps['nexia_thermostat']))
+        zone = thermostat.get_zone_by_id(int(zone_device.pluginProps['nexia_zone']))
+        asyncio.run_coroutine_threadsafe(zone.call_return_to_schedule(), self.event_loop)
+        self.update_needed = True
 
     def menuDumpNexia(self):
         for thermostat_id in self.nexia_home.get_thermostat_ids():
@@ -454,11 +462,11 @@ class Plugin(indigo.PluginBase):
 
     # Thermostat callbacks
 
-    def airCleanerModeGenerator(self, filter, valuesDict, typeId, targetId):
+    def airCleanerModeGenerator(self, _filter, _valuesDict, typeId, targetId):
         self.logger.debug(f"airCleanerModeGenerator: typeId = {typeId}, targetId = {targetId}")
         return [(mode, mode) for mode in AIR_CLEANER_MODES]
 
-    def setAirCleanerModeAction(self, pluginAction, thermostat_device, callerWaitingForResult):
+    def setAirCleanerModeAction(self, pluginAction, thermostat_device, _callerWaitingForResult):
         mode = pluginAction.props.get("cleaner_mode", "auto")
         self.logger.debug(f"{thermostat_device.name}: actionSetAirCleanerMode: {mode}")
         thermostat = self.nexia_home.get_thermostat_by_id(int(thermostat_device.pluginProps['nexia_thermostat']))
@@ -467,7 +475,7 @@ class Plugin(indigo.PluginBase):
         else:
             self.logger.warning(f"{thermostat_device.name}: actionSetAirCleanerMode: System does not have an air cleaner.")
 
-    def setDehumidifySetpointAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+    def setDehumidifySetpointAction(self, pluginAction, thermostatDevice, _callerWaitingForResult):
         setpoint = pluginAction.props.get("dehumidify_setpoint", "50")
         self.logger.debug(f"{thermostatDevice.name}: setDehumidifySetpointAction: {setpoint}%")
         thermostat = self.nexia_home.get_thermostat_by_id(int(thermostatDevice.pluginProps['nexia_thermostat']))
@@ -476,7 +484,7 @@ class Plugin(indigo.PluginBase):
         else:
             self.logger.warning(f"{thermostatDevice.name}: setDehumidifySetpointAction: System does not have dehumidify support.")
 
-    def setFanSpeedSetpointAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+    def setFanSpeedSetpointAction(self, pluginAction, thermostatDevice, _callerWaitingForResult):
         setpoint = pluginAction.props.get("fanspeed_setpoint", "50")
         self.logger.debug(f"{thermostatDevice.name}: setFanSpeedSetpointAction: {setpoint}%")
         thermostat = self.nexia_home.get_thermostat_by_id(int(thermostatDevice.pluginProps['nexia_thermostat']))
@@ -485,7 +493,7 @@ class Plugin(indigo.PluginBase):
         else:
             self.logger.warning(f"{thermostatDevice.name}: setDehumidifySetpointAction: System does not have set fan speed support.")
 
-    def setFollowScheduleAction(self, pluginAction, thermostatDevice, callerWaitingForResult):
+    def setFollowScheduleAction(self, pluginAction, thermostatDevice, _callerWaitingForResult):
         enabled = pluginAction.props.get("schedules_enabled", False)
         self.logger.debug(f"{thermostatDevice.name}: setFollowScheduleAction: {enabled}")
         thermostat = self.nexia_home.get_thermostat_by_id(int(thermostatDevice.pluginProps['nexia_thermostat']))
@@ -493,38 +501,38 @@ class Plugin(indigo.PluginBase):
 
     # Zone callbacks
 
-    def zonePresetGenerator(self, filter, valuesDict, typeId, targetId):
+    def zonePresetGenerator(self, _filter, valuesDict, typeId, targetId):
         self.logger.debug(f"zonePresetGenerator: typeId = {typeId}, targetId = {targetId}, valuesDict= {valuesDict}")
         zone_device = indigo.devices[int(targetId)]
         thermostat = self.nexia_home.get_thermostat_by_id(int(zone_device.pluginProps['nexia_thermostat']))
         zone = thermostat.get_zone_by_id(int(zone_device.pluginProps['nexia_zone']))
         return [(preset, preset) for preset in zone.get_presets()]
 
-    def zoneSetPresetAction(self, pluginAction, zone_device, callerWaitingForResult):
+    def zoneSetPresetAction(self, pluginAction, zone_device, _callerWaitingForResult):
         preset = pluginAction.props.get("zone_preset", None)
         self.logger.debug(f"{zone_device.name}: zoneSetPresetAction: {preset}")
         thermostat = self.nexia_home.get_thermostat_by_id(int(zone_device.pluginProps['nexia_thermostat']))
         zone = thermostat.get_zone_by_id(int(zone_device.pluginProps['nexia_zone']))
         asyncio.run_coroutine_threadsafe(zone.set_preset(preset), self.event_loop)
 
-    def zoneReturnToScheduleAction(self, pluginAction, zone_device, callerWaitingForResult):
+    def zoneReturnToScheduleAction(self, _pluginAction, zone_device, _callerWaitingForResult):
         self.logger.debug(f"{zone_device.name}: zoneReturnToScheduleAction")
         thermostat = self.nexia_home.get_thermostat_by_id(int(zone_device.pluginProps['nexia_thermostat']))
         zone = thermostat.get_zone_by_id(int(zone_device.pluginProps['nexia_zone']))
         asyncio.run_coroutine_threadsafe(zone.call_return_to_schedule(), self.event_loop)
 
-    def zoneSetHoldAction(self, pluginAction, zone_device, callerWaitingForResult):
+    def zoneSetHoldAction(self, _pluginAction, zone_device, _callerWaitingForResult):
         self.logger.debug(f"{zone_device.name}: zoneSetHoldAction")
         thermostat = self.nexia_home.get_thermostat_by_id(int(zone_device.pluginProps['nexia_thermostat']))
         zone = thermostat.get_zone_by_id(int(zone_device.pluginProps['nexia_zone']))
         asyncio.run_coroutine_threadsafe(zone.call_permanent_hold(), self.event_loop)
 
-    # def pickZone(self, filter=None, valuesDict=None, typeId=0): # noqa
-    #     retList = []
-    #     for dev in indigo.devices.iter("self"):
-    #         if dev.deviceTypeId == 'NexiaZone':
-    #             retList.append((dev.id, dev.name))
-    #     retList.sort(key=lambda tup: tup[1])
-    #     return retList
+    def pickZone(self, filter=None, valuesDict=None, typeId=0): # noqa
+        retList = []
+        for dev in indigo.devices.iter("self"):
+            if dev.deviceTypeId == 'NexiaZone':
+                retList.append((dev.id, dev.name))
+        retList.sort(key=lambda tup: tup[1])
+        return retList
 
 ############################################################################
