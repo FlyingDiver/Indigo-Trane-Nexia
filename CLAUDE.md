@@ -15,7 +15,7 @@ Everything lives under `Trane Home.indigoPlugin/Contents/`:
 - `Server Plugin/Devices.xml` — device type definitions (`NexiaThermostat`, `NexiaZone`), their ConfigUI, and the device **states** the plugin publishes.
 - `Server Plugin/Actions.xml`, `MenuItems.xml`, `PluginConfig.xml` — Indigo action, menu, and plugin-config UI. Each `<CallbackMethod>` / `method=` name must match a method on `Plugin`.
 - `Server Plugin/requirements.txt` — Python deps (`aiohttp`, `nexia`).
-- `Packages/` — vendored copies of the pip dependencies so they load without a separate install. **Untracked in git**; regenerate with `pip install -r requirements.txt --target Packages` and keep in sync with `requirements.txt`.
+- `Packages/` — vendored copies of the pip dependencies (with their compiled wheels) so they load without a separate install. **Gitignored, not committed** — generated locally per install. The wheels are platform-specific (`cp313 / macosx_11_0_arm64`). After changing `requirements.txt`, regenerate on a matching Mac: `rm -rf "Contents/Packages" && python3 -m pip install -r "Contents/Server Plugin/requirements.txt" --target "Contents/Packages"`.
 
 ## Architecture
 
